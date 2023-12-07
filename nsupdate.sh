@@ -1,24 +1,24 @@
 #!/bin/bash
 
-#############################################################################
-# This script is used to create an A record in AD Domain Contorller         #
-# This script adds the DNS entry for the specific hostname mapping with IP  #
-#                                                                           #
-# This script needs to be executed during domain joining                    #
-#       as well as scheduled through cron job                               #
-#       to execute every Monday at 6AM server time                          #
-#                                                                           #
-# Author: Ashis Chakraborty                                                 #
-#                                                                           #
-#    To create the file under specific folder:                              #
-#           mkdir -p /etc/network/if-up.d                                   #
-#           vi /etc/network/if-up.d/nsupdate                                #
-#           chmod 777 /etc/network/if-up.d/nsupdate                         #
-#                                                                           #
-#    To manually create the schedule in crontab:                            #
-#           crontab -e                                                      #
-#           0 6 * * 1 /etc/network/if-up.d/nsupdate 2>&1 /tmp/nsupdate.log  #
-#############################################################################
+################################################################################
+# This script is used to create an A record in AD Domain Contorller            #
+# This script adds the DNS entry for the specific hostname mapping with IP     #
+#                                                                              #
+# This script needs to be executed during domain joining                       #
+#       as well as scheduled through cron job                                  #
+#       to execute every Monday at 6AM server time                             #
+#                                                                              #
+# Author: Ashis Chakraborty                                                    #
+#                                                                              #
+#    To create the file under specific folder:                                 #
+#           mkdir -p /etc/network/if-up.d                                      #
+#           vi /etc/network/if-up.d/nsupdate.sh                                #
+#           chmod 777 /etc/network/if-up.d/nsupdate.sh                         #
+#                                                                              #
+#    To manually create the schedule in crontab:                               #
+#           crontab -e                                                         #
+#           0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log  #
+################################################################################
 
 echo `date`
 
@@ -53,9 +53,9 @@ nsupdate -gddd /tmp/nsupdate.conf
 
 #Check exit status of nsupdate command and proceed to create crontab entry, if not already present
 if [[ $? -eq 0 ]]; then
-	if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate'; echo $?) == 1 ]]; then
+	if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate.sh'; echo $?) == 1 ]]; then
 		set -f
-		echo $(crontab -l ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate 2>&1 /tmp/nsupdate.log') | crontab -
+		echo $(crontab -l ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log') | crontab -
 		set +f
 	fi
 else
