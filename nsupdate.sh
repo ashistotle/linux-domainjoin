@@ -11,14 +11,16 @@
 # Author: Ashis Chakraborty                                                 #
 #                                                                           #
 #    To create the file under specific folder:                              #
-#               mkdir -p /etc/network/if-up.d                               #
+#           mkdir -p /etc/network/if-up.d                                   #
 #           vi /etc/network/if-up.d/nsupdate                                #
-#       chmod 777 /etc/network/if-up.d/nsupdate                             #
+#           chmod 777 /etc/network/if-up.d/nsupdate                         #
 #                                                                           #
-#    To create the schedule in crontab:                                     #
+#    To manually create the schedule in crontab:                            #
 #           crontab -e                                                      #
 #           0 6 * * 1 /etc/network/if-up.d/nsupdate 2>&1 /tmp/nsupdate.log  #
 #############################################################################
+
+echo `date`
 
 DOMAIN="ad005.onehc.net"
 
@@ -48,6 +50,17 @@ kinit -k ${HOSTNAME}\$
 
 #Execute the nsupdate command with the desired configuration script
 nsupdate -gddd /tmp/nsupdate.conf
+
+#Check exit status of nsupdate command and proceed to create crontab entry, if not already present
+if [[ $? -eq 0 ]]; then
+	if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate'; echo $?) == 1 ]]; then
+		set -f
+		echo $(crontab -l ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate 2>&1 /tmp/nsupdate.log') | crontab -
+		set +f
+	fi
+else
+	echo '!!!!!!!!!!! THE SCRIPT DID NOT RUN SUCCESSFULLY. PLEASE CHECK MANUALLY FOR ERRORS. !!!!!!!!!!'
+fi
 
 #Wait for 5 seconds and restart the network service
 sleep 5s
