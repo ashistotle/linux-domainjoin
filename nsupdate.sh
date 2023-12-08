@@ -51,15 +51,18 @@ kinit -k ${HOSTNAME}\$
 #Execute the nsupdate command with the desired configuration script
 nsupdate -gddd /tmp/nsupdate.conf
 
-#Check exit status of nsupdate command and proceed to create crontab entry, if not already present
+#Check exit status of nsupdate command
 if [[ $? -eq 0 ]]; then
-	if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate.sh'; echo $?) == 1 ]]; then
-		set -f
-		echo $(crontab -l ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log') | crontab -
-		set +f
-	fi
+	echo '*********** THE SCRIPT DID HAS RUN SUCCESSFULLY. PLEASE CHECK MANUALLY FOR ERRORS. **********'
 else
 	echo '!!!!!!!!!!! THE SCRIPT DID NOT RUN SUCCESSFULLY. PLEASE CHECK MANUALLY FOR ERRORS. !!!!!!!!!!'
+fi
+
+#Create crontab entry, if not already present
+if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate.sh'; echo $?) == 1 ]]; then
+	set -f
+	echo $(crontab -l ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log') | crontab -
+	set +f
 fi
 
 #Wait for 5 seconds and restart the network service
