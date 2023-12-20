@@ -70,6 +70,7 @@ if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate.sh'; echo $?) == 1 ]]
      	else
       		echo '!!!!!!!!!!! THE SCRIPT COULD NOT BE SCHEDULED SUCCESSFULLY !!!!!!!!!!'
 		echo 'Please check crontab and replace with temporary file at: /tmp/tempcrontab.tmp'
+  	fi
 	set +f
 fi
 
