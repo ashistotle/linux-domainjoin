@@ -61,7 +61,15 @@ fi
 #Create crontab entry, if not already present
 if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate.sh'; echo $?) == 1 ]]; then
 	set -f 	
-	echo $(crontab -l; printf "\n" ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log') | crontab -
+	crontab -l > /tmp/tempcrontab.tmp
+ 	echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log' >> /tmp/tempcrontab.tmp
+ 	cat /tmp/tempcrontab.tmp | crontab -
+  	if [[ $? -eq 0 ]]; then
+   		rm -f /tmp/tempcrontab.tmp
+     		echo '*********** THE SCRIPT HAS BEEN SCHEDULED SUCCESSFULLY **********'
+     	else
+      		echo '!!!!!!!!!!! THE SCRIPT COULD NOT BE SCHEDULED SUCCESSFULLY !!!!!!!!!!'
+		echo 'Please check crontab and replace with temporary file at: /tmp/tempcrontab.tmp'
 	set +f
 fi
 
