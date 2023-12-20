@@ -60,9 +60,8 @@ fi
 
 #Create crontab entry, if not already present
 if [[ $(crontab -l | egrep -v "^(#|$)" | grep -q 'nsupdate.sh'; echo $?) == 1 ]]; then
-	set -f
- 	echo "\n"
-	echo $(crontab -l ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log') | crontab -
+	set -f 	
+	echo $(crontab -l; echo "\n" ; echo '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log') | crontab -
 	set +f
 fi
 
