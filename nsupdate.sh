@@ -29,9 +29,9 @@ OS=`grep "^ID=" /etc/os-release |cut -d "=" -f2`
 
 #Get the IP address based on OS type
 if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
-	ipAddr=$(hostname -i)
+	ipAddr=`hostname -i | awk '{print $1}'`
 else
-	ipAddr=$(hostname -I)
+	ipAddr=`hostname -I | awk '{print $1}'`
 fi
 
 #Check if hostname already contains domain
