@@ -224,7 +224,7 @@ cp -f /etc/hosts /etc/hosts_djbkp.$PSTFIX
 cp -f /etc/resolv.conf /etc/resolv.conf_djbkp.$PSTFIX
 
 #Add domain to resolv.conf file
-grep -q ^"domain $DMNLCS" /etc/resolv.conf || sed -i '/search reddog.microsoft.com/a\domain '"$DMNLCS"'' /etc/resolv.conf
+grep -q ^"domain $DMNLCS" /etc/resolv.conf || sed -i '/^search/a\domain '"$DMNLCS"'' /etc/resolv.conf
 
 #Add Host entries to host file of DC host name
 grep -q ^$IPADDR /etc/hosts || sed -i '$s/$/\n'"$IPADDR $HOSTN $HOSTN.$DMNUCS"'/' /etc/hosts
@@ -370,15 +370,15 @@ if [ -f /etc/sssd/sssd.conf_old.$PSTFIX ]; then
 	#Carry over earlier values and check for duplicates
 	ADMINGRPOLD=`grep ^simple_allow_groups /etc/sssd/sssd.conf_old.$PSTFIX | cut -d"=" -f2 | tr -d " "`
 	ADMINGRPNEW="$ADMINGRPOLD,$ADMINGRPS"
-	ADMINGRPS=`$(echo "$ADMINGRPNEW" | sed 's/^,//' | sed 's/,$//') | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
+	ADMINGRPS=`echo "$ADMINGRPNEW" | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
 
 	ADMINACCTSOLD=`grep ^simple_allow_users /etc/sssd/sssd.conf_old.$PSTFIX | cut -d"=" -f2 | tr -d " "`
 	ADMINACCTSNEW="$ADMINACCTSOLD,$ADMINACCTS"
-	ADMINACCTS=`$(echo "$ADMINACCTSNEW" | sed 's/^,//' | sed 's/,$//') | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
+	ADMINACCTS=`echo "$ADMINACCTSNEW" | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
 	
 	log "Copied admin account/group from old sssd.conf file /etc/sssd/sssd.conf_old.$PSTFIX. New values:" "INFO"
 	log "Admin Accounts: $ADMINACCTS" "INFO"
-	log "Admin Groups: $ADMINACCTS" "INFO"	
+	log "Admin Groups: $ADMINGRPS" "INFO"	
 fi
 echo "simple_allow_groups = $ADMINGRPS" >> /etc/sssd/sssd.conf
 echo "simple_allow_users = $ADMINACCTS" >> /etc/sssd/sssd.conf
