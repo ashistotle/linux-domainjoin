@@ -55,7 +55,7 @@ function help() {
 	exit 0
 }
 
-function log {
+function log() {
 	local message="$1"
 	local level="${2:-ERROR}"  # Default log level is error
 
@@ -84,7 +84,7 @@ DCSERVER=""
 NSUPDT=false
 
 #Get parameters
-while getopts ":hd:i:p:o:a:g:c:n:" opt; do
+while getopts ":hd:i:p:o:a:g:c:n" opt; do
 	case $opt in
 		h)
 			help
@@ -126,24 +126,23 @@ done
 
 # Check for mandatory arguments
 if [ -z "$DOMAIN" ] || [ -z "$OSPID" ] || [ -z "$OSPPWD" ] || [ -z "$NSTDOULST" ]; then
-    log "Missing required arguments. Use -h for help."
+    log "Missing required arguments. Use -h for help. {Status code: 0fxdjcspc01}."
     exit 1
 fi
 
-if [ -f /etc/sssd/sssd.conf ]; then
-	log "Old sssd.conf file found. Taking backup." "INFO"
-	cp -f /etc/sssd/sssd.conf /etc/sssd/sssd.conf_old.$PSTFIX
-fi
-	
+PSTFIX=`date '+%d%m%Y%H%M%S'`
 
-log "Script running with following parameters: Domain=$DOMAIN, OSP_ID=$OSPID, OSP_PWD=#####, OU=$NSTDOULST, Admin_Accts=$ADMINACCTS, Admin_Groups=$ADMINGRPS, DC_Server=$DCSERVER, Setup_nsupdate=$NSUPDT."
+if [ -f /etc/sssd/sssd.conf ]; then
+	log "Old sssd.conf file found. Taking backup: /etc/sssd/sssd.conf_old.$PSTFIX" "INFO"
+	cp -f "/etc/sssd/sssd.conf" "/etc/sssd/sssd.conf_old.$PSTFIX"
+fi	
+
+log "Script running with following parameters: Domain=$DOMAIN, OSP_ID=$OSPID, OSP_PWD=#####, OU=$NSTDOULST, Admin_Accts=$ADMINACCTS, Admin_Groups=$ADMINGRPS, DC_Server=$DCSERVER, Setup_nsupdate=$NSUPDT." "INFO"
 
 #Check if hostname already contains domain and remove it
 if [[ `echo "${DCSERVER}" | grep -ic "${DOMAIN}"` -gt 0 ]];then
 	DCSERVER=`echo "${DCSERVER}" | awk -F"." '{print $1}'`
 fi
-
-PSTFIX=`date '+%d%m%Y%H%M%S'`
 
 #Convert domain to upper and lower case
 DMNUCS="${DOMAIN^^}"
@@ -377,7 +376,7 @@ if [ -f /etc/sssd/sssd.conf_old.$PSTFIX ]; then
 	ADMINACCTSNEW="$ADMINACCTSOLD,$ADMINACCTS"
 	ADMINACCTS=`$(echo "$ADMINACCTSNEW" | sed 's/^,//' | sed 's/,$//') | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
 	
-	log "Copied admin account/group from old sssd.conf file. New values:" "INFO"
+	log "Copied admin account/group from old sssd.conf file /etc/sssd/sssd.conf_old.$PSTFIX. New values:" "INFO"
 	log "Admin Accounts: $ADMINACCTS" "INFO"
 	log "Admin Groups: $ADMINACCTS" "INFO"	
 fi
@@ -556,7 +555,7 @@ if $NSUPDT; then
 	echo '	echo "*********** THE NSUPDATE SCRIPT HAS COMPLETED SUCCESSFULLY **********"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	logger "INFO: [DJScript] The nsupdate script ran successfully"' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'else' >> /etc/network/if-up.d/nsupdate.sh
-	echo '	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT DID NOT COMPLETE SUCCESSFULLY !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
+	echo '	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED EXECUTION !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	logger "ERROR: [DJScript] The nsupdate script did not run successfully"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	return 111' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'fi' >> /etc/network/if-up.d/nsupdate.sh
@@ -572,7 +571,7 @@ if $NSUPDT; then
 	echo '     	echo "*********** THE NSUPDATE SCRIPT HAS BEEN SCHEDULED SUCCESSFULLY **********"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		logger "INFO: [DJScript] The nsupdate script was scheduled successfully"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '  else' >> /etc/network/if-up.d/nsupdate.sh
-	echo '     	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT COULD NOT BE SCHEDULED SUCCESSFULLY !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
+	echo '     	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED TO BE SCHEDULED SUCCESSFULLY !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		echo "Please check crontab and replace with temporary file at: /tmp/tempcrontab.tmp"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		logger "ERROR: [DJScript] The nsupdate script could not be scheduled successfully"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		return 121' >> /etc/network/if-up.d/nsupdate.sh
