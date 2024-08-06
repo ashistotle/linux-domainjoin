@@ -500,7 +500,7 @@ do
 					log "Admin group $ADMINGRP already present in /etc/sudoers.d/djscript. Skipping." "INFO"
 				else
 					echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
-					log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript. Skipping." "INFO"
+					log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript." "INFO"
 				fi
 			else
 				#Create the djscript file within sudoers.d
@@ -509,7 +509,7 @@ do
 				log "Sudoers file /etc/sudoers.d/djscript created." "INFO"
 				
 				echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
-				log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript. Skipping." "INFO"
+				log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript." "INFO"
 			fi
 		
 			# Use visudo to check if the djscript file is correct
