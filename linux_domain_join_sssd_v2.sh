@@ -39,31 +39,31 @@ set +x
 #       - <Date> | <Update>                                                                 #
 #                                                                                           #
 #                                                                                           #
-#################################################################################################################################################################################
-#	Exit code |	Status code   |		Description                                                                                                                                 #
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-#	1		  | 0fxdjcsru01	  |	This script needs to be run with root privileges. Please login as root and run this script again. Use -h for help.                              #
-#	1		  | 0fxdjcsip01	  |	Invalid option provided in command line. Please provide valid options only. Use -h for help.                                                    #
-#	1		  | 0fxdjcspa01	  |	Option requires an argument. Please provide an argument to the specified option. Use -h for help.                                               #
-#	1		  | 0fxdjcspc01	  |	Missing required arguments. Provide all mandatory options and arguments. Use -h for help.                                                       #
-#	2		  | 0fxdjcspi02	  |	Installation of necessary packages for domain joining failed.                                                                                   #
-#	3		  | 0fxdjcsip03	  |	IP Address of the machine could not be retrieved.                                                                                               #
-#	4		  | 0fxdjcshn04	  |	Calculated hostname evaluates to "localhost".                                                                                                   #
-#	5		  | 0fxdjcshn05	  |	Hostname of the machine could not be retrieved.                                                                                                 #
-#	6		  | 0fxdjcshf06	  |	Host file updates for domain joining failed.                                                                                                    #
-#	7		  | 0fxdjcskb07	  |	krb5 config file not updated.                                                                                                                   #
-#	8		  | 0fxdjcsdj08	  |	Domain joining failed due to some error. See output.                                                                                            #
-#	9		  | 0fxdjcssd09	  |	New sssd config file not updated. Check file permissions or try again.                                                                          #
-#	10		  | 0fxdjcsdj10	  |	sssd service restart post sssd config changes failed. Check sssd config file and fix as required.                                               #
-#	11		  | 0fxdjcssh11	  |	PasswordAuthentication could not be set to yes in sshd config file. Check file permissions or try again.                                        #
-#	12		  | 0fxdjcssh12	  |	sshd service restart post sshd config changes failed. Check sshd config file and fix as required.                                               #
-#	13		  | 0fxdjcsaa13	  |	Provided Admin Account could not be added to sudoers group and cannot be used to login to this machine (Script does not exit).                  #
-#	14		  | 0fxdjcsag14	  |	Some error occurred while trying to add Admin group to sudoers. ALL changes made by script to sudoers file will be reverted. Check faulty file. #
-#	15		  | 0fxdjcsnu15	  |	nsupdate script creation failed                                                                                                                 #
-#	16		  | 0fxdjcsnu16	  |	nsupdate script execution failed                                                                                                                #
-#	17		  | 0fxdjcsnu17	  |	nsupdate script failed to be scheduled through crontab                                                                                          #
-#	18		  | 0fxdjcsnu18	  |	nsupdate script execution failed due to some unknown error                                                                                      #
-#################################################################################################################################################################################
+#########################################################################################################################################################################################
+#	Exit code |  Status code   |		Description                                                                                                                             #
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#	1	  | 0fxdjcsru01	   |	This script needs to be run with root privileges. Please login as root and run this script again. Use -h for help.                              #
+#	1	  | 0fxdjcsip01	   |	Invalid option provided in command line. Please provide valid options only. Use -h for help.                                                    #
+#	1	  | 0fxdjcspa01	   |	Option requires an argument. Please provide an argument to the specified option. Use -h for help.                                               #
+#	1	  | 0fxdjcspc01	   |	Missing required arguments. Provide all mandatory options and arguments. Use -h for help.                                                       #
+#	2	  | 0fxdjcspi02	   |	Installation of necessary packages for domain joining failed.                                                                                   #
+#	3	  | 0fxdjcsip03	   |	IP Address of the machine could not be retrieved.                                                                                               #
+#	4	  | 0fxdjcshn04	   |	Calculated hostname evaluates to "localhost".                                                                                                   #
+#	5	  | 0fxdjcshn05	   |	Hostname of the machine could not be retrieved.                                                                                                 #
+#	6	  | 0fxdjcshf06	   |	Host file updates for domain joining failed.                                                                                                    #
+#	7	  | 0fxdjcskb07	   |	krb5 config file not updated.                                                                                                                   #
+#	8	  | 0fxdjcsdj08	   |	Domain joining failed due to some error. See output.                                                                                            #
+#	9	  | 0fxdjcssd09	   |	New sssd config file not updated. Check file permissions or try again.                                                                          #
+#	10	  | 0fxdjcsdj10	   |	sssd service restart post sssd config changes failed. Check sssd config file and fix as required.                                               #
+#	11	  | 0fxdjcssh11	   |	PasswordAuthentication could not be set to yes in sshd config file. Check file permissions or try again.                                        #
+#	12	  | 0fxdjcssh12	   |	sshd service restart post sshd config changes failed. Check sshd config file and fix as required.                                               #
+#	13	  | 0fxdjcsaa13	   |	Provided Admin Account could not be added to sudoers group and cannot be used to login to this machine (Script does not exit).                  #
+#	14	  | 0fxdjcsag14	   |	Some error occurred while trying to add Admin group to sudoers. ALL changes made by script to sudoers file will be reverted. Check faulty file. #
+#	15	  | 0fxdjcsnu15	   |	nsupdate script creation failed                                                                                                                 #
+#	16	  | 0fxdjcsnu16	   |	nsupdate script execution failed                                                                                                                #
+#	17	  | 0fxdjcsnu17	   |	nsupdate script failed to be scheduled through crontab                                                                                          #
+#	18	  | 0fxdjcsnu18	   |	nsupdate script execution failed due to some unknown error                                                                                      #
+#########################################################################################################################################################################################
 
 # Function to display help
 function help() {
