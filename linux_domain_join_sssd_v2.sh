@@ -491,10 +491,29 @@ do
 
 		#Check if the line already exists
 		if grep -Fxq "${SUDOLINE}" /etc/sudoers; then
-			log "Admin group $ADMINGRP already present in sudoers. Skipping." "INFO"
+			log "Admin group $ADMINGRP already present in /etc/sudoers. Skipping." "INFO"
 		else
-			# Use visudo for safe editing
-			visudo -c <<< "${SUDOLINE}\n"
+			#Check if the djscript file is present in sudoers.d
+			if [ -f /etc/sudoers.d/djscript ]; then
+				#Check if the line already exists
+				if grep -Fxq "${SUDOLINE}" /etc/sudoers.d/djscript; then
+					log "Admin group $ADMINGRP already present in /etc/sudoers.d/djscript. Skipping." "INFO"
+				else
+					echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
+					log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript. Skipping." "INFO"
+				fi
+			else
+				#Create the djscript file within sudoers.d
+				touch /etc/sudoers.d/djscript
+				chmod 0440 /etc/sudoers.d/djscript
+				log "Sudoers file /etc/sudoers.d/djscript created." "INFO"
+				
+				echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
+				log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript. Skipping." "INFO"
+			fi
+		
+			# Use visudo to check if the djscript file is correct
+			visudo -c -f /etc/sudoers.d/djscript
 		
 			if [ $? -ne 0 ]
 			then
