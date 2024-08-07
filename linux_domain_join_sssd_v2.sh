@@ -171,7 +171,7 @@ if [ -f /etc/sssd/sssd.conf ]; then
 	cp -f "/etc/sssd/sssd.conf" "/etc/sssd/sssd.conf_old.$PSTFIX"
 fi	
 
-log "Script running with following parameters: Domain=$DOMAIN, OSP_ID=$OSPID, OSP_PWD=#####, OU=$NSTDOULST, Admin_Accts=$ADMINACCTS, Admin_Groups=$ADMINGRPS, DC_Server=$DCSERVER, Setup_nsupdate=$NSUPDT." "INFO"
+log "Script running with following parameters: Domain=$DOMAIN, OSP_ID=$OSPID, OSP_PWD=#####, OU=$NSTDOULST, Admin_Accts=$ADMINACCTS, Admin_Groups=$ADMINGRPS, DC_Server=$DCSERVER, Setup_nsupdate=$NSUPDT, Suppress_Minor_Errors=$SUPPERRS." "INFO"
 
 #Check if hostname already contains domain and remove it
 if [[ `echo "${DCSERVER}" | grep -ic "${DOMAIN}"` -gt 0 ]];then
