@@ -24,7 +24,7 @@ set +x
 #       6. Optional, comma separated list of domain groups to be added as admins            #
 #       7. Optional, hostname of primary DC server                                          #
 #       8. Optional, flag to run nsupdate (default is no)                                   #
-#       9. Optional, flag to suppress minor errors (default is no)                                   #
+#       9. Optional, flag to suppress minor errors (default is no)                          #
 #       (Apart from input param 1, no other input should contain domain name)               #
 #                                                                                           #
 # Output:                                                                                   #
@@ -37,7 +37,7 @@ set +x
 #                                                                                           #
 # Create Date: 2nd Aug 2024                                                                 #
 # Update Log:                                                                               #
-#       - <Date> | <Update>                                                                 #
+#       - 7th Aug 2024 | Added code to suppress minor errors                                #
 #                                                                                           #
 #                                                                                           #
 #########################################################################################################################################################################################
