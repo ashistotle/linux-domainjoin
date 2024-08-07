@@ -161,7 +161,7 @@ if [ -z "$DOMAIN" ] || [ -z "$OSPID" ] || [ -z "$OSPPWD" ] || [ -z "$NSTDOULST" 
 fi
 
 if [ $SUPPERRS ]; then
-	log "You have chosen to suppress minor errors! This option is not recommended as it my cause serious problems with domain joining." "INFO"
+	log "You have chosen to suppress minor errors! This option is not recommended as it may cause serious problems with domain joining." "INFO"
 fi
 
 PSTFIX=`date '+%d%m%Y%H%M%S'`
