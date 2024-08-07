@@ -24,6 +24,7 @@ set +x
 #       6. Optional, comma separated list of domain groups to be added as admins            #
 #       7. Optional, hostname of primary DC server                                          #
 #       8. Optional, flag to run nsupdate (default is no)                                   #
+#       9. Optional, flag to suppress minor errors (default is no)                                   #
 #       (Apart from input param 1, no other input should contain domain name)               #
 #                                                                                           #
 # Output:                                                                                   #
@@ -76,6 +77,7 @@ function help() {
 	echo "-g: Admin groups (comma-separated, optional)"
 	echo "-c: Domain controller hostname (optional)"
 	echo "-n: Run nsupdate (optional)"
+	echo "-s: Suppress minor errors (optional, NOT RECOMMENDED)"
 	exit 0
 }
 
@@ -106,9 +108,10 @@ ADMINACCTS=""
 ADMINGRPS=""
 DCSERVER=""
 NSUPDT=false
+SUPPERRS=false
 
 #Get parameters
-while getopts ":hd:i:p:o:a:g:c:n" opt; do
+while getopts ":hd:i:p:o:a:g:c:ns" opt; do
 	case $opt in
 		h)
 			help
@@ -137,6 +140,9 @@ while getopts ":hd:i:p:o:a:g:c:n" opt; do
 		n)
 			NSUPDT=true
 			;;
+		s)
+			SUPPERRS=true
+			;;
 		\?)
 			log "Invalid option: -$OPTARG. Use -h for help. {Status code: 0fxdjcsip01}."
 			exit 1
@@ -152,6 +158,10 @@ done
 if [ -z "$DOMAIN" ] || [ -z "$OSPID" ] || [ -z "$OSPPWD" ] || [ -z "$NSTDOULST" ]; then
     log "Missing required arguments. Use -h for help. {Status code: 0fxdjcspc01}."
     exit 1
+fi
+
+if [ $SUPPERRS ]; then
+	log "You have chosen to suppress minor errors! This option is not recommended as it my cause serious problems with domain joining." "INFO"
 fi
 
 PSTFIX=`date '+%d%m%Y%H%M%S'`
@@ -257,7 +267,9 @@ grep -q ^$IPADDR /etc/hosts || sed -i '$s/$/\n'"$IPADDR $HOSTN $HOSTN.$DMNUCS"'/
 if [ $? -ne 0 ]
 then
 	log "Host file updates for domain joining failed {Status code: 0fxdjcshf06}."
-	exit 6
+	if [ ! $SUPPERRS ]; then
+		exit 6
+	fi
 else
 	log "Host file successfully updated for domain joining." "INFO"
 fi
@@ -271,7 +283,9 @@ then
 	if [ $? -ne 0 ]
 	then
 		log "Host file updates for domain joining failed {Status code: 0fxdjcshf06}."
-		exit 6
+		if [ ! $SUPPERRS ]; then
+			exit 6
+		fi
 	else
 		log "Host file successfully updated for domain joining." "INFO"
 	fi
@@ -352,7 +366,7 @@ then
 	log "Domain joining failed {Status code: 0fxdjcsdj08}."
 	exit 8
 else
-	log "Domain joining successful - $HOSTN,$OUFRMT,$DCFRMT" "INFO"
+	log "Domain joining successful - $HOSTN,$OUFRMT,$DCFRMT,$DCSERVER" "INFO"
 fi
 
 #Backup default /etc/sssd/sssd.conf
@@ -455,15 +469,16 @@ systemctl restart sshd.service
 if [ $? -ne 0 ]
 then
 	log "sshd service restart post sshd config changes failed  {Status code: 0fxdjcssh12}."	
-	log "Attempting to restore sshd file and restart sshd service. Please note that domain joining will fail even after this step." "INFO"
+	log "Attempting to restore sshd file and restart sshd service. Please note that domain joining may fail even after this step." "INFO"
 	
 	#Restore sshd file
 	mv -f /etc/ssh/sshd_config_djbkp.$PSTFIX /etc/ssh/sshd_config
 	
 	#Start the sssd service
 	systemctl restart sshd.service
-	
-	exit 12
+	if [ ! $SUPPERRS ]; then
+		exit 12
+	fi
 else
 	log "sshd service restart post sshd config changes was successful." "INFO"
 fi
@@ -548,7 +563,9 @@ do
 				log "Reverting ALL changes to sudoers file. Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
 				cp /etc/sudoers.d/djscript /tmp/djscript_djbkp.$PSTFIX.faulty
 				mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
-				exit 14
+				if [ ! $SUPPERRS ]; then
+					exit 14
+				fi
 			else
 				log "Admin group $ADMINGRP added to sudoers." "INFO"
 			fi
@@ -582,6 +599,7 @@ if $NSUPDT; then
 	echo '#           crontab -e                                                         #' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#           0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log  #' >> /etc/network/if-up.d/nsupdate.sh
 	echo '################################################################################' >> /etc/network/if-up.d/nsupdate.sh
+	echo "SUPPERRS=$SUPPERRS" >> /etc/network/if-up.d/nsupdate.sh
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'echo $0' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#Prepare the nsupdate configuration script' >> /etc/network/if-up.d/nsupdate.sh
@@ -603,7 +621,9 @@ if $NSUPDT; then
 	echo 'else' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED EXECUTION !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	logger "ERROR: [DJScript] The nsupdate script did not run successfully"' >> /etc/network/if-up.d/nsupdate.sh
-	echo '	return 111' >> /etc/network/if-up.d/nsupdate.sh
+	echo '	if [ ! $SUPPERRS ]; then' >> /etc/network/if-up.d/nsupdate.sh
+	echo '		return 111' >> /etc/network/if-up.d/nsupdate.sh
+	echo '	fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#Create crontab entry, if not already present' >> /etc/network/if-up.d/nsupdate.sh
@@ -620,7 +640,9 @@ if $NSUPDT; then
 	echo '     	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED TO BE SCHEDULED SUCCESSFULLY !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		echo "Please check crontab and replace with temporary file at: /tmp/tempcrontab.tmp"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		logger "ERROR: [DJScript] The nsupdate script could not be scheduled successfully"' >> /etc/network/if-up.d/nsupdate.sh
-	echo '		return 121' >> /etc/network/if-up.d/nsupdate.sh
+	echo '		if [ ! $SUPPERRS ]; then' >> /etc/network/if-up.d/nsupdate.sh
+	echo '			return 121' >> /etc/network/if-up.d/nsupdate.sh
+	echo '		fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '  fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	set +f' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'fi' >> /etc/network/if-up.d/nsupdate.sh
@@ -652,18 +674,26 @@ if $NSUPDT; then
 		elif [ $RTNVAL -eq 111 ]
 		then
 			log "nsupdate script execution failed {Status code: 0fxdjcsnu16}."
-			exit 16
+			if [ ! $SUPPERRS ]; then
+				exit 16
+			fi
 		elif [ $RTNVAL -eq 121 ]
 		then
 			log "nsupdate script failed to be scheduled through crontab {Status code: 0fxdjcsnu17}."
-			exit 17
+			if [ ! $SUPPERRS ]; then
+				exit 17
+			fi
 		else
 			log "nsupdate script execution failed due to some unknown error {Status code: 0fxdjcsnu18}."
-			exit 18
+			if [ ! $SUPPERRS ]; then
+				exit 18
+			fi
 		fi	
 	else
 		log "nsupdate script creation failed {Status code: 0fxdjcsnu15}."
-		exit 15
+		if [ ! $SUPPERRS ]; then
+			exit 15
+		fi
 	fi
 fi
 
