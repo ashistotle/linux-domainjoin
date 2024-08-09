@@ -45,12 +45,6 @@ set +x
 #How to run the script
 #. ./linux_domain_join_sssd_v1.sh "<DOMAIN>" "<OSP_ID>" '<OSP_PWD>' "<NESTED,OU,LIST>" "<ADMIN_ACCT>" "<ADMIN_GROUP>"
 
-#Azure Servers
-#. ./linux_domain_join_sssd_v1.sh "ad005.onehc.net" "<OSP_ID>" '<OSP_PASSWORD>' "Servers,_Central,CHN,RA133" "z004vyxa-a01" "RA133_G_HC-CoreOps-Admins,SH103_MADiS_132924_G"
-
-#TE DC Servers
-#. ./linux_domain_join_sssd_v1.sh "ad005.onehc.net" "<OSP_ID>" '<OSP_PASSWORD>' "Non_Windows_Servers,SNX,Servers,_Central,Siecloud,IN,RA104" "z004vyxa-a01" "RA133_G_HC-CoreOps-Admins"
-
 #Check that the script is being run as root user
 if ([ `id | cut -d"=" -f2 | cut -d"(" -f1` -ne 0 ]) then		
 	logger "ERROR: [DJScript] This script needs to be run with root privileges. Please login as root and run this script again {Status code: 0fxdjcsru01}."
@@ -75,7 +69,6 @@ OSPPWD="$3"
 #OURGN="$5"
 NSTDOULST=`echo $4 | tr -d " "`
 ADMINACCTS=`echo $5 | tr -d " "`
-#ADMINGRP="RA133_G_ADM-MPCD-Admins@ad005.onehc.net"
 ADMINGRP=`echo $6 | tr -d " "`
 #OULVL1="Servers"
 #OULVL2="_Central"
@@ -184,12 +177,6 @@ else
 	logger "INFO: [DJScript] Host file successfully updated for domain joining."
 fi
 
-if [ $# -eq 7 ]
-then
-	#Add domain controller <-- Check if this is required
-	grep -q '^129.103.4.39' /etc/hosts || sed -i '$s/$/\n129.103.4.39 DEMCHAHC01A DEMCHAHC01A.ad005.onehc.net/' /etc/hosts
-fi
-
 #Backup /etc/krb5.conf
 cp -f /etc/krb5.conf /etc/krb5.conf_djbkp.$PSTFIX
 
@@ -252,12 +239,7 @@ sleep 5
 
 
 #Realm join using OSP ID and Password
-if [ $# -eq 7 ]
-then
-	echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" DEMCHAHC01A.ad005.onehc.net -v
-else
-	echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" $DMNLCS -v
-fi
+echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" $DMNLCS -v
 
 #Check if realm join was successful
 if [ $? -ne 0 ]
@@ -288,10 +270,6 @@ echo "config_file_version = 2" >> /etc/sssd/sssd.conf
 echo "services = nss, pam" >> /etc/sssd/sssd.conf
 echo "" >> /etc/sssd/sssd.conf
 echo "[domain/$DMNLCS]" >> /etc/sssd/sssd.conf
-if [ $# -eq 7 ]
-then
-	echo "ad_server = demchahc01a.ad005.onehc.net" >> /etc/sssd/sssd.conf
-fi
 echo "ad_domain = $DMNLCS" >> /etc/sssd/sssd.conf
 echo "krb5_realm = $DMNUCS" >> /etc/sssd/sssd.conf
 echo "realmd_tags = manages-system joined-with-adcli" >> /etc/sssd/sssd.conf

@@ -22,7 +22,7 @@
 
 echo `date`
 
-DOMAIN="ad005.onehc.net"
+DOMAIN="example.com"
 
 #Get the OS type
 OS=`grep "^ID=" /etc/os-release |cut -d "=" -f2`

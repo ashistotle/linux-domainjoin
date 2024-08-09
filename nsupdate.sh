@@ -22,7 +22,7 @@
 
 echo `date`
 
-DOMAIN="ad005.onehc.net"
+DOMAIN="example.com"
 
 #Get the OS type
 OS=`grep "^ID=" /etc/os-release |cut -d "=" -f2`
@@ -40,7 +40,7 @@ if [[ `echo "${HOSTNAME}" | grep -c "${DOMAIN}"` -gt 0 ]];then
 fi
 
 #Prepare the nsupdate configuration script
-echo "server ad005.onehc.net" > /tmp/nsupdate.conf
+echo "server $DOMAIN" > /tmp/nsupdate.conf
 echo "update delete ${HOSTNAME}.${DOMAIN} A" >> /tmp/nsupdate.conf
 echo "update add ${HOSTNAME}.${DOMAIN} 3600 A ${ipAddr}" >> /tmp/nsupdate.conf
 echo "send quit" >> /tmp/nsupdate.conf
