@@ -410,11 +410,11 @@ if [ -f /etc/sssd/sssd.conf_old.$PSTFIX ]; then
 	#Carry over earlier values and check for duplicates
 	ADMINGRPOLD=`grep ^simple_allow_groups /etc/sssd/sssd.conf_old.$PSTFIX | cut -d"=" -f2 | tr -d " "`
 	ADMINGRPNEW="$ADMINGRPOLD,$ADMINGRPS"
-	ADMINGRPS=`echo "$ADMINGRPNEW" | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
+	ADMINGRPS=`echo $ADMINGRPNEW | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/' | tr -d "\""`
 
 	ADMINACCTSOLD=`grep ^simple_allow_users /etc/sssd/sssd.conf_old.$PSTFIX | cut -d"=" -f2 | tr -d " "`
 	ADMINACCTSNEW="$ADMINACCTSOLD,$ADMINACCTS"
-	ADMINACCTS=`echo "$ADMINACCTSNEW" | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/'`
+	ADMINACCTS=`echo $ADMINACCTSNEW | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/' | tr -d "\""`
 	
 	log "Copied admin account/group from old sssd.conf file /etc/sssd/sssd.conf_old.$PSTFIX. New values:" "INFO"
 	log "Admin Accounts: $ADMINACCTS" "INFO"
