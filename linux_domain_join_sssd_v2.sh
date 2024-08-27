@@ -391,10 +391,10 @@ echo "config_file_version = 2" >> /etc/sssd/sssd.conf
 echo "services = nss, pam" >> /etc/sssd/sssd.conf
 echo "" >> /etc/sssd/sssd.conf
 echo "[domain/$DMNLCS]" >> /etc/sssd/sssd.conf
-if [ -n "$DCSERVER" ]
-then
-	echo "ad_server = $DCSERVER.$DMNLCS" >> /etc/sssd/sssd.conf
-fi
+#if [ -n "$DCSERVER" ]
+#then
+#	echo "ad_server = $DCSERVER.$DMNLCS" >> /etc/sssd/sssd.conf
+#fi
 echo "ad_domain = $DMNLCS" >> /etc/sssd/sssd.conf
 echo "krb5_realm = $DMNUCS" >> /etc/sssd/sssd.conf
 echo "realmd_tags = manages-system joined-with-adcli" >> /etc/sssd/sssd.conf
