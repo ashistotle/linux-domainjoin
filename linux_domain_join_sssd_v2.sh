@@ -452,8 +452,17 @@ fi
 #Backup /etc/ssh/sshd_config
 cp -f /etc/ssh/sshd_config /etc/ssh/sshd_config_djbkp.$PSTFIX
 
-#change the Password authentication to Yes on the /etc/ssh/sshd_config
-sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+#Check if multiple rows contain PasswordAuthentication
+if [ `grep -c 'PasswordAuthentication' /etc/ssh/sshd_config` -gt 1 ]
+then
+	log "Multiple lines containing PasswordAuthentication found in sshd_config file. These extra lines will be truncated." "INFO"
+	#Remove all extra lines except for first occurrence
+	DELLINES=`grep -n PasswordAuthentication /etc/ssh/sshd_config  | awk -F":" '{print $1"d;"}' | awk 'NR > 1' | tr -d "\n" | sed 's/;$//'`
+	sed -i "$RMVLINES" /etc/ssh/sshd_config
+fi
+
+#change Password authentication to Yes on the file /etc/ssh/sshd_config
+sed -i '/^#\?PasswordAuthentication/s/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
 #Check PasswordAuthentication is set to yes in /etc/ssh/sshd_config file
 if [ `grep ^PasswordAuthentication /etc/ssh/sshd_config | awk '{print $NF}' | grep -ic yes` -eq 1 ]
