@@ -458,7 +458,7 @@ then
 	log "Multiple lines containing PasswordAuthentication found in sshd_config file. These extra lines will be truncated." "INFO"
 	#Remove all extra lines except for first occurrence
 	DELLINES=`grep -n PasswordAuthentication /etc/ssh/sshd_config  | awk -F":" '{print $1"d;"}' | awk 'NR > 1' | tr -d "\n" | sed 's/;$//'`
-	sed -i "$RMVLINES" /etc/ssh/sshd_config
+	sed -i "$DELLINES" /etc/ssh/sshd_config
 fi
 
 #change Password authentication to Yes on the file /etc/ssh/sshd_config
