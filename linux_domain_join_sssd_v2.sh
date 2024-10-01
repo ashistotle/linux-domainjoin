@@ -83,6 +83,8 @@ function help() {
 	exit 0
 }
 
+SCRIPTNAME=`basename $0`
+
 function log() {
 	local message="$1"
 	local level="${2:-ERROR}"  # Default log level is error
@@ -91,7 +93,7 @@ function log() {
 	formatted_message="${timestamp} - $level: [DJScript] $message"
 
 	echo "$formatted_message"
-	logger -t "$(basename $0)" -p "$level" "$formatted_message"
+	logger -t "$SCRIPTNAME" -p "$level" "$formatted_message"
 }
 
 #Check that the script is being run as root user
