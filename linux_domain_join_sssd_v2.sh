@@ -449,6 +449,13 @@ else
 	log "sssd service restart post sssd config changes was successful." "INFO"
 fi
 
+#Add authconfig part here to ensure pam.d fies are updated
+if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
+	pam-auth-update --force
+else
+	authconfig --enablesssdauth --update
+fi
+
 #Backup /etc/ssh/sshd_config
 cp -f /etc/ssh/sshd_config /etc/ssh/sshd_config_djbkp.$PSTFIX
 
