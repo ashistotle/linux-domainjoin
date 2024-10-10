@@ -93,6 +93,7 @@ function log() {
 	formatted_message="${timestamp} - $level: [DJScript] $message"
 
 	echo "$formatted_message"
+	#logger -t "$(basename $0)" -p "$level" "$formatted_message"
 	logger -t "$SCRIPTNAME" -p "$level" "$formatted_message"
 }
 
@@ -210,7 +211,7 @@ if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 	IPADDR=`hostname -i | awk '{print $1}'`
 	
 	#Install necessary packages
-	apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils	
+	DEBIAN_FRONTEND=noninteractive apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils	
 else
 	IPADDR=`hostname -I | awk '{print $1}'`
 	
