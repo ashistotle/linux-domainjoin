@@ -35,7 +35,7 @@ function log() {
 	local level="${2:-ERROR}"  # Default log level is error
 
 	timestamp=$(date +%Y-%m-%d_%H:%M:%S)
-	formatted_message="${timestamp} - $level: [DJScript] $message"
+	formatted_message="${timestamp} - $level: [UserAccess] $message"
 
 	echo "$formatted_message"
 	#logger -t "$(basename $0)" -p "$level" "$formatted_message"
