@@ -16,12 +16,12 @@ set +x
 
 #Function to display help
 function help() {
-	echo "Usage: $0 -i user_name [-g group_name] [-a]"
+	echo "Usage: $0 -i user_name [-g group_name] [-r request_number] [-n requestor_mail] [-d additional_comments] [-a]"
 	echo "-i: User name (comma-separated, required if no group is provided)"
 	echo "-g: User group name (comma-separated, optional)"
 	echo "-r: Request number (optional)"
 	echo "-n: Requestor name (optional)"
-	echo "-d: Request details (optional)"
+	echo "-d: Request details - additional comments for user creation (optional)"
 	echo "-a: Make user/group as Admin (optional)"
 	echo "-s: Suppress minor errors (optional, NOT RECOMMENDED)"
 	exit 0
