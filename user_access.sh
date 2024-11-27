@@ -17,7 +17,7 @@ set +x
 #Function to display help
 function help() {
 	echo "Usage: $0 -i user_name [-g group_name] [-r request_number] [-n requestor_mail] [-d additional_comments] [-a]"
-	echo "-i: User name (comma-separated, required if no group is provided)"
+	echo "-u: User name (comma-separated, required if no group is provided)"
 	echo "-g: User group name (comma-separated, optional)"
 	echo "-r: Request number (optional)"
 	echo "-n: Requestor name (optional)"
@@ -66,12 +66,12 @@ SUPPERRS=false
 RANDOMPASS=""
 
 #Get parameters
-while getopts ":hi:g:r:n:d:as" opt; do
+while getopts ":hu:g:r:n:d:as" opt; do
 	case $opt in
 		h)
 			help
 			;;
-		i)
+		u)
 			USRNAME="$OPTARG"
 			;;
 		g)
