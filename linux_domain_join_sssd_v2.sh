@@ -471,7 +471,7 @@ then
 	sed -i "$DELLINES" /etc/ssh/sshd_config
 fi
 
-#change Password authentication to Yes on the file /etc/ssh/sshd_config
+#Change Password authentication to Yes on the file /etc/ssh/sshd_config
 sed -i '/^#\?PasswordAuthentication/s/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
 #Check PasswordAuthentication is set to yes in /etc/ssh/sshd_config file
