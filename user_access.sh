@@ -105,11 +105,13 @@ done
 
 #Check for mandatory arguments
 if [ -z "$USRNAME" ] && [ -z "$GRPNAME" ]; then
+	echo "$USRNAME" "$GRPNAME"
     log "Missing required arguments. Use -h for help. {Status code: 0fxuacspc01}."
     exit 1
 fi
 
 if [ $SUPPERRS ]; then
+	echo $SUPPERRS
 	log "Caution: You have chosen to suppress minor errors! This option is not recommended as it may cause serious problems." "INFO"
 fi
 
