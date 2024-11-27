@@ -189,7 +189,7 @@ else
 
 			#Check if the user was created
 			if id "$USERNAME" &>/dev/null; then
-				log "Local user $USERNAME has been successfully created." "INFO"
+				log "Local user $USERNAME has been successfully created with following comment: $REQRDTLS." "INFO"
 			else
 				log "Local user $USERNAME could not be created {Status code: 0fxuaurct03}."
 				exit 3
