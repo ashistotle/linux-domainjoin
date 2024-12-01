@@ -56,13 +56,13 @@ fi
 
 log "Script running with root privileges." "INFO"
 
-USRNAME=""
-GRPNAME=""
+USRNAME=
+GRPNAME=
 REQNUM="(Not provided)"
 REQRMAIL=""
 REQRDTLS=""
-MKADMIN=false
-SUPPERRS=false
+MKADMIN=
+SUPPERRS=
 RANDOMPASS=""
 
 #Get parameters
