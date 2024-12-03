@@ -123,7 +123,7 @@ if [ -z "$GRPNAME" ]; then
 	#If group name is not provided, create group same as username
 	GRPNAME="$USRNAME,localusers"
 else
-	GRPNAME="$GRPNAME,localusers"
+	GRPNAME="$GRPNAME,$USRNAME,localusers"
 fi
 
 #Convert comma-separated string to an array
@@ -186,6 +186,7 @@ else
 				fi
 			fi
 
+			log "useradd -m -g $USERNAME -G $SCNDRYGROUPS -c $REQRDTLS $USERNAME" "INFO"
 			#Create the user with provided user name and primary group as user name and secondary groups
 			sudo useradd -m -g "$USERNAME" -G "$SCNDRYGROUPS" -c "$REQRDTLS" "$USERNAME" #Add logic to add requestor details
 
@@ -223,56 +224,59 @@ if [ $MKADMIN ]; then
 	fi
 
 	for ADMINGRP in "${GROUPNAMES[@]}"; do
-		
-		getent group $ADMINGRP
-	
-		if [ $? -eq 0 ]; then
-			log "Group $ADMINGRP found. Attempting to add to sudoers." "INFO"
-			#Construct the sudoers line
-			SUDOLINE="%${ADMINGRP} ALL=(ALL:ALL) ALL"
 
-			#Check if the line already exists
-			if grep -Fxq "${SUDOLINE}" /etc/sudoers; then
-				log "Admin group $ADMINGRP already present in /etc/sudoers. Skipping." "INFO"
-			else
-				#Check if the djscript file is present in sudoers.d
-				if [ -f /etc/sudoers.d/djscript ]; then
-					#Check if the line already exists
-					if grep -Fxq "${SUDOLINE}" /etc/sudoers.d/djscript; then
-						log "Admin group $ADMINGRP already present in /etc/sudoers.d/djscript. Skipping." "INFO"
+		if [ "$ADMINGRP" != "localusers" ]; then	#Find means to not consider localusers group
+		
+			getent group $ADMINGRP
+
+			if [ $? -eq 0 ]; then
+				log "Group $ADMINGRP found. Attempting to add to sudoers." "INFO"
+				#Construct the sudoers line
+				SUDOLINE="%${ADMINGRP} ALL=(ALL:ALL) ALL"
+
+				#Check if the line already exists
+				if grep -Fxq "${SUDOLINE}" /etc/sudoers; then
+					log "Admin group $ADMINGRP already present in /etc/sudoers. Skipping." "INFO"
+				else
+					#Check if the djscript file is present in sudoers.d
+					if [ -f /etc/sudoers.d/djscript ]; then
+						#Check if the line already exists
+						if grep -Fxq "${SUDOLINE}" /etc/sudoers.d/djscript; then
+							log "Admin group $ADMINGRP already present in /etc/sudoers.d/djscript. Skipping." "INFO"
+						else
+							echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
+							log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript." "INFO"
+						fi
 					else
+						#Create the djscript file within sudoers.d
+						touch /etc/sudoers.d/djscript
+						chmod 0440 /etc/sudoers.d/djscript
+						log "Sudoers file /etc/sudoers.d/djscript created." "INFO"
+
 						echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
 						log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript." "INFO"
 					fi
-				else
-					#Create the djscript file within sudoers.d
-					touch /etc/sudoers.d/djscript
-					chmod 0440 /etc/sudoers.d/djscript
-					log "Sudoers file /etc/sudoers.d/djscript created." "INFO"
 
-					echo "${SUDOLINE}" | tee -a /etc/sudoers.d/djscript
-					log "Admin group $ADMINGRP added to /etc/sudoers.d/djscript." "INFO"
-				fi
+					# Use visudo to check if the djscript file is correct
+					visudo -c -f /etc/sudoers.d/djscript
 
-				# Use visudo to check if the djscript file is correct
-				visudo -c -f /etc/sudoers.d/djscript
-
-				if [ $? -ne 0 ]
-				then
-					log "Some error occurred while trying to add Admin group $ADMINGRP to sudoers {Status code: 0fxuagrag05}."
-					log "Reverting ALL changes to sudoers file. Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
-					cp /etc/sudoers.d/djscript /tmp/djscript_djbkp.$PSTFIX.faulty
-					mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
-					if [ ! $SUPPERRS ]; then
-						exit 5
+					if [ $? -ne 0 ]
+					then
+						log "Some error occurred while trying to add Admin group $ADMINGRP to sudoers {Status code: 0fxuagrag05}."
+						log "Reverting ALL changes to sudoers file. Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
+						cp /etc/sudoers.d/djscript /tmp/djscript_djbkp.$PSTFIX.faulty
+						mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
+						if [ ! $SUPPERRS ]; then
+							exit 5
+						fi
+					else
+						log "Admin group $ADMINGRP added to sudoers." "INFO"
 					fi
-				else
-					log "Admin group $ADMINGRP added to sudoers." "INFO"
 				fi
+			else
+				log "Admin group $ADMINGRP was not detected and cannot be used to login to this machine." "INFO"
 			fi
-		else
-			log "Admin group $ADMINGRP was not detected and cannot be used to login to this machine." "INFO"
-		fi	
+		fi
 	done
 fi
 
