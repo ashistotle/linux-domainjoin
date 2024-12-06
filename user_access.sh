@@ -16,13 +16,15 @@ set +x
 
 #Function to display help
 function help() {
-	echo "Usage: $0 -i user_name [-g group_name] [-r request_number] [-n requestor_mail] [-d additional_comments] [-a]"
+	echo "Usage: $0 -u user_name [-p password] [-g group_name] [-r request_number] [-n requestor_mail] [-d additional_comments] [-a] [-f pam_safe]"
 	echo "-u: User name (comma-separated, required if no group is provided)"
+	echo "-p: Password for the user(s) (optional)"
 	echo "-g: User group name (comma-separated, optional)"
 	echo "-r: Request number (optional)"
-	echo "-n: Requestor name (optional)"
+	echo "-n: Requestor name or mail ID (optional)"
 	echo "-d: Request details - additional comments for user creation (optional)"
 	echo "-a: Make user/group as Admin (optional)"
+	echo "-f: PAM safe of user for onboarding to Cyberark (optional)"
 	echo "-s: Suppress minor errors (optional, NOT RECOMMENDED)"
 	exit 0
 }
@@ -57,22 +59,27 @@ fi
 log "Script running with root privileges." "INFO"
 
 USRNAME=
+USRPASS=
 GRPNAME=
 REQNUM="(Not provided)"
-REQRMAIL=""
+REQRMAIL="(Not provided)"
 REQRDTLS=""
 MKADMIN=
+USRSAFE=
 SUPPERRS=
 RANDOMPASS=""
 
 #Get parameters
-while getopts ":hu:g:r:n:d:as" opt; do
+while getopts ":hu:p:g:r:n:d:af:s" opt; do
 	case $opt in
 		h)
 			help
 			;;
 		u)
 			USRNAME="$OPTARG"
+			;;
+		p)
+			USRPASS="$OPTARG"
 			;;
 		g)
 			GRPNAME="$OPTARG"
@@ -83,13 +90,16 @@ while getopts ":hu:g:r:n:d:as" opt; do
 		n)
 			REQRMAIL="$OPTARG"
 			;;
-		n)
+		d)
 			REQRDTLS="$OPTARG"
 			;;
         a)
 			MKADMIN=true
 			;;
-		s)
+		f)
+			USRSAFE="$OPTARG"
+			;;
+        s)
 			SUPPERRS=true
 			;;
 		\?)
@@ -169,7 +179,7 @@ else
 			#If username is part of the group names provided, remove it from the groups list else take the whole group list as secondary groups
            	SCNDRYGROUPS=$(echo "${GRPNAME//,/}" | sed "s/\b$USERNAME\b//g" | tr -s ' ' ',' | sed 's/^,//;s/,$//')
 
-			#Logic to add comment to the new user
+			#Logic to add comment to the new user if no comments are provided
 			if [ -z "$REQRDTLS" ]; then
 				if [ -z "$REQNUM" ]; then
 					if [ -z "$REQRMAIL" ]; then
@@ -186,7 +196,7 @@ else
 				fi
 			fi
 
-			log "useradd -m -g $USERNAME -G $SCNDRYGROUPS -c $REQRDTLS $USERNAME" "INFO"
+			log "useradd -m -g $USERNAME -G $SCNDRYGROUPS -c \"$REQRDTLS\" $USERNAME" "INFO"
 			#Create the user with provided user name and primary group as user name and secondary groups
 			sudo useradd -m -g "$USERNAME" -G "$SCNDRYGROUPS" -c "$REQRDTLS" "$USERNAME" #Add logic to add requestor details
 
@@ -198,12 +208,17 @@ else
 				exit 3
 			fi
 
-			#Assign a random password to the newly created user
-			RANDOMPASS=$(genranpass)
-			echo "$USERNAME:$RANDOMPASS" | sudo chpasswd
+			#Check if password is provided, else create random passowrd and assign
+			if [ -z "$USRPASS" ]; then
+				#Assign a random password
+				USRPASS=$(genranpass)
+			fi
+
+			#Assign password to newly created user
+			echo "$USERNAME:$USRPASS" | sudo chpasswd
 
 			if [ $? -eq 0 ]; then
-				log "Local user $USERNAME has been assigned a password: $RANDOMPASS." "INFO"
+				log "Local user $USERNAME has been assigned a password: $USRPASS." "INFO"
 			else
 				log "Local user $USERNAME could not be assigned a password, assign one manually {Status code: 0fxuaurct04}."
 				if [ ! $SUPPERRS ]; then
