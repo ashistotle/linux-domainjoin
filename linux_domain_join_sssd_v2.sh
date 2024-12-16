@@ -69,7 +69,8 @@ set +x
 #########################################################################################################################################################################################
 
 # Function to display help
-function help() {
+#function help() {
+help() {
 	echo "Usage: $0 -d domain -i osp_id -p osp_password -o ou_list [-a admin_accounts] [-g admin_groups] [-c domain_controller] [-n]"
 	echo "-d: Domain name (required)"
 	echo "-i: OSP ID (required)"
@@ -85,7 +86,8 @@ function help() {
 
 SCRIPTNAME=`basename $0`
 
-function log() {
+#function log() {
+log() {
 	local message="$1"
 	local level="${2:-ERROR}"  # Default log level is error
 
