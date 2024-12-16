@@ -16,8 +16,9 @@ set +x
 
 #Function to display help
 function help() {
-	echo "Usage: $0 -u user_name [-p password] [-g group_name] [-r request_number] [-n requestor_mail] [-d additional_comments] [-a] [-f pam_safe]"
+	echo "Usage: $0 -u user_name [-l local_user] [-p password] [-g group_name] [-r request_number] [-n requestor_mail] [-d additional_comments] [-a] [-f pam_safe]"
 	echo "-u: User name (comma-separated, required if no group is provided)"
+	echo "-l: Local user for domain joined system (comma-separated, optional)"
 	echo "-p: Password for the user(s) (optional)"
 	echo "-g: User group name (comma-separated, optional)"
 	echo "-r: Request number (optional)"
@@ -44,10 +45,31 @@ function log() {
 	logger -t "$SCRIPTNAME" -p "$level" "$formatted_message"
 }
 
-# Function to generate a random password
+#Function to generate a random password
 function genranpass() {
     local password_length=16
     tr -dc 'A-Za-z0-9!@#$%^&*()_+' < /dev/urandom | head -c $password_length
+}
+
+#Function to create unique list from provided random list
+function createuniqlist() {
+	local inputlist="$1"
+
+	#Convert the list to an array
+	IFS=',' read -r -a array <<< "$inputlist"
+
+	#Use an associative array to track unique values
+	declare -A unique
+
+	#Loop through the array and add unique values to the associative array
+	for item in "${array[@]}"; do
+	    unique["$item"]=1
+	done
+
+	#Extract unique values into a new array
+	unique_array=("${!unique[@]}")
+
+	return $unique_array
 }
 
 #Check that the script is being run as root user
@@ -59,6 +81,7 @@ fi
 log "Script running with root privileges." "INFO"
 
 USRNAME=
+LCLUSR=
 USRPASS=
 GRPNAME=
 REQNUM="(Not provided)"
@@ -68,6 +91,8 @@ MKADMIN=
 USRSAFE=
 SUPPERRS=
 RANDOMPASS=""
+REALMNAME=""
+DOMAINJOINTAG=0
 
 #Get parameters
 while getopts ":hu:p:g:r:n:d:af:s" opt; do
@@ -77,6 +102,9 @@ while getopts ":hu:p:g:r:n:d:af:s" opt; do
 			;;
 		u)
 			USRNAME="$OPTARG"
+			;;
+		l)
+			LCLUSR="$OPTARG"
 			;;
 		p)
 			USRPASS="$OPTARG"
@@ -117,6 +145,7 @@ done
 if [ -z "$USRNAME" ] && [ -z "$GRPNAME" ]; then
 	echo "$USRNAME" "$GRPNAME"
     log "Missing required arguments. Use -h for help. {Status code: 0fxuacspc01}."
+	log "Provide at least one of -u or -g options along with required parameters to proceed." "INFO"
     exit 1
 fi
 
@@ -127,22 +156,31 @@ fi
 
 PSTFIX=`date '+%d%m%Y%H%M%S'`
 
-#Check if group is requested and irrespective of request create a localusers group
-if [ -z "$GRPNAME" ]; then
-	log "Group name has not been provided. Group(s) with name same as username(s) will be created." "INFO"
-	#If group name is not provided, create group same as username
-	GRPNAME="$USRNAME,localusers"
-else
-	GRPNAME="$GRPNAME,$USRNAME,localusers"
-fi
-
 #Convert comma-separated string to an array
-IFS=',' read -r -a USERNAMES <<< "$USRNAME"
-IFS=',' read -r -a GROUPNAMES <<< "$GRPNAME"
+USERNAMES=`createuniqlist "$USRNAME"`
+GROUPNAMES=`createuniqlist "$GRPNAME"`
+LOCALUSERS=`createuniqlist "$LCLUSR"`
 
 #Check if multiple users as well as groups are provided
 if [ ${#USERNAMES[@]} -gt 1 ] && [ ${#GROUPNAMES[@]} -gt 1 ]; then
-	log "Caution: Multiple users and groups are provided. All users (${USRNAMES[@]}) will be added to all groups (${GRPNAMES[@]})." "INFO"
+	log "Caution: Multiple users and groups are provided. All users (${USERNAMES[@]}) will be added to all groups (${GROUPNAMES[@]})." "INFO"
+fi
+
+#Check if machine is domain joined
+if [ `realm list | wc -l` -gt 0 ]; then
+	DOMAINJOINTAG=1
+	#Find the domain name
+	REALMNAME=`realm list | grep realm-name | cut -d: -f2 | cut -d. -f1 | tr -d " "`
+fi
+
+#Check if group is requested
+if [ -z "$GRPNAME" ]; then
+	#If group name is not provided and system is not domain joined, create group same as username
+	log "Group name has not been provided. Group(s) with name same as username(s) will be created." "INFO"
+	GRPNAME="$USRNAME"
+else
+	#Add user name to the list of provided group names	
+	GRPNAME="$GRPNAME,$USRNAME"
 fi
 
 #Loop for all provided groups
@@ -153,8 +191,7 @@ for GROUPNAME in "${GROUPNAMES[@]}"; do
 	#If group does not exist, create it
 	else
 		sudo groupadd "$GROUPNAME"
-	
-		#Check if the group was created
+			#Check if the group was created
 		if getent group "$GROUPNAME" > /dev/null 2>&1; then
 			log "Local group $GROUPNAME has been successfully created." "INFO"
 		else
