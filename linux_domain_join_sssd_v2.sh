@@ -580,10 +580,12 @@ do
 		
 			if [ $? -ne 0 ]
 			then
-				log "Some error occurred while trying to add Admin group $ADMINGRP to sudoers {Status code: 0fxdjcsag14}."
-				log "Reverting ALL changes to sudoers file. Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
-				cp /etc/sudoers.d/djscript /tmp/djscript_djbkp.$PSTFIX.faulty
-				mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
+				log "Some error occurred while trying to add Admin group $ADMINGRP to sudoers {Status code: 0fxdjcsag14}."				
+				mv /etc/sudoers.d/djscript /tmp/djscript_djbkp.$PSTFIX.faulty
+				if [ -f /etc/djscript-sudoers_djbkp.$PSTFIX ]; then
+					mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
+				fi
+				log "Reverting ALL changes to sudoers file(s). Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
 				if [ ! $SUPPERRS ]; then
 					exit 14
 				fi
