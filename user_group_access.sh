@@ -577,6 +577,7 @@ if [ ! -z "$USRNAME" ]; then
 	fi
 fi
 
+#Ensure LCLUSERS and DJUSERS are in the ADMINGROUPS array
 add_value_to_array "ADMINGROUPS" "LCLUSERS"
 add_value_to_array "ADMINGROUPS" "DJUSERS"
 
