@@ -209,12 +209,12 @@ OS=`grep "^ID=" /etc/os-release |cut -d "=" -f2`
 #Run commands based on OS type
 if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 	IPADDR=`hostname -i | awk '{print $1}'`
-	
+	DEBIAN_FRONTEND=noninteractive apt-get -y update
 	#Install necessary packages
 	DEBIAN_FRONTEND=noninteractive apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils	
 else
 	IPADDR=`hostname -I | awk '{print $1}'`
-	
+	yum -y update
 	#Install necessary packages
 	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils	
 fi
