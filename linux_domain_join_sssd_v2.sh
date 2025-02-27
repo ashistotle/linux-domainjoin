@@ -131,7 +131,7 @@ while getopts ":hd:i:p:o:a:g:c:ns" opt; do
 			OSPPWD="$OPTARG"
 			;;
 		o)
-			NSTDOULST=`echo $OPTARG | tr -d " "`
+			NSTDOULST="$OPTARG"
 			;;
 		a)
 			ADMINACCTS=`echo $OPTARG | tr -d " "`
@@ -513,7 +513,13 @@ do
 	if [ $? -ne 0 ]
 	then
 		log "Account $ADMINACCT was not detected and cannot be used to login to this machine." "INFO"
-	else	
+	else
+		#Extract user ID and if non local user then convert user name to lower case
+		USERUID=`id -u $ADMINACCT`
+		if [ $USERUID -gt 60000 ]; then
+			ADMINACCT="$(echo "$ADMINACCT" | tr '[:upper:]' '[:lower:]')"	#Convert ID to lower
+		fi
+		#Add admin account to sudo groups
 		if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 			usermod -aG sudo $ADMINACCT
 			
