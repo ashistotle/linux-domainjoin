@@ -507,18 +507,19 @@ fi
 #Add admin accounts to sudoers group
 for ADMINACCT in `echo $ADMINACCTS | tr "," " "`
 do
+	#Extract user ID and if non local user then convert user name to lower case
+	USERUID=`id -u $ADMINACCT`
+	if [ $USERUID -gt 60000 ]; then
+		ADMINACCT="$(echo "$ADMINACCT" | tr '[:upper:]' '[:lower:]')"	#Convert ID to lower
+	fi
+
 	#Check if the domain admin account exists
 	id $ADMINACCT > /dev/null
 
 	if [ $? -ne 0 ]
 	then
 		log "Account $ADMINACCT was not detected and cannot be used to login to this machine." "INFO"
-	else
-		#Extract user ID and if non local user then convert user name to lower case
-		USERUID=`id -u $ADMINACCT`
-		if [ $USERUID -gt 60000 ]; then
-			ADMINACCT="$(echo "$ADMINACCT" | tr '[:upper:]' '[:lower:]')"	#Convert ID to lower
-		fi
+	else		
 		#Add admin account to sudo groups
 		if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 			usermod -aG sudo $ADMINACCT
