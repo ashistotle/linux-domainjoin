@@ -690,6 +690,9 @@ if [ "$NSUPDT" = "true" ]; then
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#Wait for 5 seconds and restart the network service' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'sleep 5s' >> /etc/network/if-up.d/nsupdate.sh
+	echo 'hostnamectl set-hostname ${HOSTN}.${DMNLCS}' >> /etc/network/if-up.d/nsupdate.sh
+	echo 'systemctl restart sssd' >> /etc/network/if-up.d/nsupdate.sh
+	echo 'systemctl restart sshd' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#systemctl restart NetworkManager' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'return 0' >> /etc/network/if-up.d/nsupdate.sh
 	
