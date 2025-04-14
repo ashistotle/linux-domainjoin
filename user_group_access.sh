@@ -187,9 +187,9 @@ GRPNAME=""
 REQNUM=""
 REQRMAIL=""
 REQRDTLS=""
-MKADMIN=false
+MKADMIN="false"
 USRSAFE=""
-SUPPERRS=false
+SUPPERRS="false"
 RANDOMPASS=""
 REALMNAME=""
 DOMAINJOINTAG=0
@@ -227,13 +227,13 @@ while getopts ":hu:p:g:r:n:d:af:s" opt; do
 			REQRDTLS="$OPTARG"
 			;;
         a)
-			MKADMIN=true
+			MKADMIN="true"
 			;;
 		f)
 			USRSAFE="$OPTARG"
 			;;
         s)
-			SUPPERRS=true
+			SUPPERRS="true"
 			;;
 		\?)
 			log "Invalid option: -$OPTARG. Use -h for help. {Status code: 0fxuacsip02}."
@@ -254,7 +254,7 @@ if [ -z "$USRNAME" ] && [ -z "$GRPNAME" ]; then
     exit 2
 fi
 
-if [ $SUPPERRS ]; then
+if [ "$SUPPERRS" = "true" ]; then
 	echo $SUPPERRS
 	log "Caution: You have chosen to suppress minor errors! This option is not recommended as it may cause serious problems." "INFO"
 fi
@@ -320,7 +320,7 @@ for GROUPNAME in "${GROUPNAMES[@]}"; do
 			log "Local group $GROUPNAME has been successfully created." "INFO"
 		else
 			log "Local group $GROUPNAME could not be created {Status code: 0fxuagpct03}."
-			if [ ! $SUPPERRS ]; then
+			if [ "$SUPPERRS" = "false" ]; then
 				exit 3
 			fi
 		fi
@@ -411,7 +411,7 @@ else
 				log "Local user $USERNAME has been assigned a password." "INFO"
 			else
 				log "Local user $USERNAME could not be assigned a password, assign one manually {Status code: 0fxuaurct05}."
-				if [ ! $SUPPERRS ]; then
+				if [ "$SUPPERRS" = "false" ]; then
 					exit 5
 				fi
 			fi
@@ -461,7 +461,7 @@ if [ ! -z "$USRNAME" ]; then
 					add_value_to_array "DJUSERS" "$USERUID"
 				else
 					log "Group DJUSERS does not exist. Cannot add $USERNAME to the group. {Status code: 0fxuagpad06}."
-					if [ ! $SUPPERRS ]; then
+					if [ "$SUPPERRS" = "false" ]; then
 						exit 6
 					fi
 				fi
@@ -472,7 +472,7 @@ if [ ! -z "$USRNAME" ]; then
 					add_value_to_array "LCLUSERS" "$USERUID"
 				else
 					log "Group LCLUSERS does not exist. Cannot add $USERNAME to the group. {Status code: 0fxuagpad07}."
-					if [ ! $SUPPERRS ]; then
+					if [ "$SUPPERRS" = "false" ]; then
 						exit 7
 					fi
 				fi
@@ -525,7 +525,7 @@ if [ ! -z "$USRNAME" ]; then
 								log "AD user $USERNAME has been added to group $GROUPNAME." "INFO"
 							else
 								log "AD user $USERNAME could not be added to group $GROUPNAME. {Status code: 0fxuagpad08}."
-								if [ ! $SUPPERRS ]; then
+								if [ "$SUPPERRS" = "false" ]; then
 									exit 8
 								fi
 							fi
@@ -552,7 +552,7 @@ if [ ! -z "$USRNAME" ]; then
     			log "User $DJUSER was successfully added to the group DJUSERS." "INFO"
 			else
     			log "Failed to add user $DJUSER to the group DJUSERS. {Status code: 0fxuagpad09}."
-				if [ ! $SUPPERRS ]; then
+				if [ "$SUPPERRS" = "false" ]; then
 					exit 9
 				fi
 			fi
@@ -569,7 +569,7 @@ if [ ! -z "$USRNAME" ]; then
     			log "User $LCLUSER was successfully added to the group LCLUSERS." "INFO"
 			else
     			log "Failed to add user $LCLUSER to the group LCLUSERS. {Status code: 0fxuagpad10}."
-				if [ ! $SUPPERRS ]; then
+				if [ "$SUPPERRS" = "false" ]; then
 					exit 10
 				fi
 			fi
@@ -586,7 +586,7 @@ if [ $COLLATEDATA -eq 1 ]; then
 fi
 
 #Add logic to add group(s) as admin - users part of these groups will automatically inherit sudo access
-if [ $MKADMIN ]; then
+if [ "$MKADMIN" = "true" ]; then
 
 	#Take backup of sudoers file
 	cp -f /etc/sudoers /etc/sudoers_djbkp.$PSTFIX
@@ -639,7 +639,7 @@ if [ $MKADMIN ]; then
 							mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
 						fi
 						log "Reverting ALL changes to sudoers file(s). Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
-						if [ ! $SUPPERRS ]; then
+						if [ "$SUPPERRS" = "false" ]; then
 							exit 11
 						fi
 					else

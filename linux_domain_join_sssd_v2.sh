@@ -112,8 +112,8 @@ NSTDOULST=""
 ADMINACCTS=""
 ADMINGRPS=""
 DCSERVER=""
-NSUPDT=false
-SUPPERRS=false
+NSUPDT="false"
+SUPPERRS="false"
 
 #Get parameters
 while getopts ":hd:i:p:o:a:g:c:ns" opt; do
@@ -143,10 +143,10 @@ while getopts ":hd:i:p:o:a:g:c:ns" opt; do
 			DCSERVER="$OPTARG"
 			;;
 		n)
-			NSUPDT=true
+			NSUPDT="true"
 			;;
 		s)
-			SUPPERRS=true
+			SUPPERRS="true"
 			;;
 		\?)
 			log "Invalid option: -$OPTARG. Use -h for help. {Status code: 0fxdjcsip01}."
@@ -165,7 +165,7 @@ if [ -z "$DOMAIN" ] || [ -z "$OSPID" ] || [ -z "$OSPPWD" ] || [ -z "$NSTDOULST" 
     exit 1
 fi
 
-if [ $SUPPERRS ]; then
+if [ "$SUPPERRS" = "true" ]; then
 	log "You have chosen to suppress minor errors! This option is not recommended as it may cause serious problems with domain joining." "INFO"
 fi
 
@@ -212,11 +212,19 @@ if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 	DEBIAN_FRONTEND=noninteractive apt-get -y update
 	#Install necessary packages
 	DEBIAN_FRONTEND=noninteractive apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils	
-else
+elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
 	IPADDR=`hostname -I | awk '{print $1}'`
 	yum -y update
 	#Install necessary packages
 	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils	
+elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
+    IPADDR=`hostname -I | awk '{print $1}'`
+    zypper refresh
+    # Install necessary packages
+    zypper install -y sssd realmd adcli sssd-tools krb5-client bind-utils
+else
+    log "Unsupported OS detected {Status code: 0fxdjcsos01}."
+    exit 1
 fi
 
 #Check if package installation was successful
@@ -272,7 +280,7 @@ grep -q ^$IPADDR /etc/hosts || sed -i '$s/$/\n'"$IPADDR $HOSTN $HOSTN.$DMNUCS"'/
 if [ $? -ne 0 ]
 then
 	log "Host file updates for domain joining failed {Status code: 0fxdjcshf06}."
-	if [ ! $SUPPERRS ]; then
+	if [ "$SUPPERRS" = "false" ]; then
 		exit 6
 	fi
 else
@@ -288,7 +296,7 @@ then
 	if [ $? -ne 0 ]
 	then
 		log "Host file updates for domain joining failed {Status code: 0fxdjcshf06}."
-		if [ ! $SUPPERRS ]; then
+		if [ "$SUPPERRS" = "false" ]; then
 			exit 6
 		fi
 	else
@@ -455,8 +463,11 @@ fi
 #Add authconfig part here to ensure pam.d fies are updated
 if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 	pam-auth-update --force
-else
+elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
 	authconfig --enablesssdauth --update
+elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
+    pam-config --add --sss
+    pam-config --add --mkhomedir
 fi
 
 #Backup /etc/ssh/sshd_config
@@ -497,7 +508,7 @@ then
 	
 	#Start the sssd service
 	systemctl restart sshd.service
-	if [ ! $SUPPERRS ]; then
+	if [ "$SUPPERRS" = "false" ]; then
 		exit 12
 	fi
 else
@@ -593,7 +604,7 @@ do
 					mv /etc/djscript-sudoers_djbkp.$PSTFIX /etc/sudoers.d/djscript
 				fi
 				log "Reverting ALL changes to sudoers file(s). Faulty file: /tmp/djscript_djbkp.$PSTFIX.faulty" "INFO"
-				if [ ! $SUPPERRS ]; then
+				if [ "$SUPPERRS" = "false" ]; then
 					exit 14
 				fi
 			else
@@ -606,7 +617,7 @@ do
 done
 
 #Create the script /etc/network/if-up.d/nsupdate.sh
-if $NSUPDT; then
+if [ "$NSUPDT" = "true" ]; then
 	#Create the folder, if not present
 	if [ ! -d /etc/network/if-up.d ]
 	then
@@ -651,7 +662,7 @@ if $NSUPDT; then
 	echo 'else' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED EXECUTION !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	logger "ERROR: [DJScript] The nsupdate script did not run successfully"' >> /etc/network/if-up.d/nsupdate.sh
-	echo '	if [ ! $SUPPERRS ]; then' >> /etc/network/if-up.d/nsupdate.sh
+	echo '	if [ "$SUPPERRS" = "false" ]; then' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		return 111' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'fi' >> /etc/network/if-up.d/nsupdate.sh
@@ -670,7 +681,7 @@ if $NSUPDT; then
 	echo '     	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED TO BE SCHEDULED SUCCESSFULLY !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		echo "Please check crontab and replace with temporary file at: /tmp/tempcrontab.tmp"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		logger "ERROR: [DJScript] The nsupdate script could not be scheduled successfully"' >> /etc/network/if-up.d/nsupdate.sh
-	echo '		if [ ! $SUPPERRS ]; then' >> /etc/network/if-up.d/nsupdate.sh
+	echo '		if [ "$SUPPERRS" = "false" ]; then' >> /etc/network/if-up.d/nsupdate.sh
 	echo '			return 121' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '  fi' >> /etc/network/if-up.d/nsupdate.sh
@@ -704,24 +715,24 @@ if $NSUPDT; then
 		elif [ $RTNVAL -eq 111 ]
 		then
 			log "nsupdate script execution failed {Status code: 0fxdjcsnu16}."
-			if [ ! $SUPPERRS ]; then
+			if [ "$SUPPERRS" = "false" ]; then
 				exit 16
 			fi
 		elif [ $RTNVAL -eq 121 ]
 		then
 			log "nsupdate script failed to be scheduled through crontab {Status code: 0fxdjcsnu17}."
-			if [ ! $SUPPERRS ]; then
+			if [ "$SUPPERRS" = "false" ]; then
 				exit 17
 			fi
 		else
 			log "nsupdate script execution failed due to some unknown error {Status code: 0fxdjcsnu18}."
-			if [ ! $SUPPERRS ]; then
+			if [ "$SUPPERRS" = "false" ]; then
 				exit 18
 			fi
 		fi	
 	else
 		log "nsupdate script creation failed {Status code: 0fxdjcsnu15}."
-		if [ ! $SUPPERRS ]; then
+		if [ "$SUPPERRS" = "false" ]; then
 			exit 15
 		fi
 	fi
