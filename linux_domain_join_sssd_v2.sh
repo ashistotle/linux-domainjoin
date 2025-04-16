@@ -495,11 +495,11 @@ else
 fi
 
 # Define the PAM configuration directory
-PAM_DIR="/etc/pam.d"
+PAMDIR="/etc/pam.d"
 
 # Comment out references to tally in PAM files
 log "Commenting out references to tally in PAM configuration files." "INFO"
-for file in "$PAM_DIR"/*; do
+for file in "$PAMDIR"/*; do
 	if grep -q "tally" "$file"; then
 		# Backup existing PAM files
 		cp "$file" "$file.djbkp.$PSTFIX"
@@ -509,25 +509,12 @@ for file in "$PAM_DIR"/*; do
 	fi
 done
 
-# Determine PAM configuration file
-if [ -f /etc/pam.d/common-session ]; then
-	PAM_FILE="/etc/pam.d/common-session"
-elif [ -f /etc/pam.d/system-auth ]; then
-	PAM_FILE="/etc/pam.d/system-auth"
-else
-	echo "PAM configuration file not found."
-	log "PAM configuration file not found {Status code: 0fxdjcpam11}."
-	if [ "$SUPPERRS" = "false" ]; then
-		exit 11
-	fi
-fi
-
 # Add pam_mkhomedir to PAM configuration
-log "Configuring pam_mkhomedir in $PAM_FILE." "INFO"
-if ! grep -q "pam_mkhomedir.so" "$PAM_FILE"; then
-	echo "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> "$PAM_FILE"
+if ! grep -q "pam_mkhomedir.so" "$PAMDIR"/*; then
+	log "Configuring pam_mkhomedir in $PAMDIR/common-session." "INFO"
+	echo "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> "$PAMDIR/common-session"
 else
-	echo "pam_mkhomedir is already configured in $PAM_FILE."
+	echo "pam_mkhomedir is already configured in $PAMDIR."
 fi
 
 #Start the sshd service
