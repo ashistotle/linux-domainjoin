@@ -361,8 +361,12 @@ else
 fi
 
 #Leave realm if already joined
-echo "$OSPPWD" | realm leave $DMNLCS -v
-sleep 5
+if [ `realm list | grep -ic "$DMNLCS"` -gt 0 ]; then
+	log "Machine is already joined to domain $DMNLCS. Attempting to leave the domain." "INFO"
+	#Leave realm using OSP ID and Password	
+	echo "$OSPPWD" | realm leave $DMNLCS -v
+	sleep 5
+fi
 
 #Realm join using OSP ID and Password
 if [ -n "$DCSERVER" ]
@@ -449,7 +453,7 @@ chown root:root /etc/sssd/sssd.conf
 
 #Start and enable the sssd service:
 systemctl enable sssd.service
-systemctl restart sssd.service
+systemctl stop sssd.service; rm -f /var/lib/sss/{db,mc}/*; systemctl start sssd.service
 
 #Check if sssd service restart was successful
 if [ $? -ne 0 ]
