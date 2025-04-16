@@ -211,17 +211,17 @@ if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 	IPADDR=`hostname -i | awk '{print $1}'`
 	DEBIAN_FRONTEND=noninteractive apt-get -y update
 	#Install necessary packages
-	DEBIAN_FRONTEND=noninteractive apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils	
+	DEBIAN_FRONTEND=noninteractive apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils libpam-mkhomedir
 elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
 	IPADDR=`hostname -I | awk '{print $1}'`
 	yum -y update
 	#Install necessary packages
-	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils	
+	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils pam_oddjob_mkhomedir
 elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
     IPADDR=`hostname -I | awk '{print $1}'`
     zypper refresh
     # Install necessary packages
-    zypper install -y sssd realmd adcli sssd-tools krb5-client bind-utils
+    zypper install -y sssd realmd adcli sssd-tools krb5-client bind-utils pam_oddjob_mkhomedir
 else
     log "Unsupported OS detected {Status code: 0fxdjcsos01}."
     exit 1
@@ -494,10 +494,49 @@ else
 	exit 11
 fi
 
-#Start the sssd service
+# Define the PAM configuration directory
+PAM_DIR="/etc/pam.d"
+
+# Backup existing PAM files
+log "Creating backups of PAM configuration files." "INFO"
+for file in "$PAM_DIR"/*; do
+	cp "$file" "$file.djbkp.$PSTFIX"
+done
+
+# Comment out references to tally in PAM files
+log "Commenting out references to tally in PAM configuration files." "INFO"
+for file in "$PAM_DIR"/*; do
+	if grep -q "tally" "$file"; then
+		sed -i 's/^\(.*tally.*\)$/#\1/' "$file"
+		log "Reference to tally found in $file and commented." "INFO"
+	fi
+done
+
+# Determine PAM configuration file
+if [ -f /etc/pam.d/common-session ]; then
+	PAM_FILE="/etc/pam.d/common-session"
+elif [ -f /etc/pam.d/system-auth ]; then
+	PAM_FILE="/etc/pam.d/system-auth"
+else
+	echo "PAM configuration file not found."
+	log "PAM configuration file not found {Status code: 0fxdjcpam11}."
+	if [ "$SUPPERRS" = "false" ]; then
+		exit 11
+	fi
+fi
+
+# Add pam_mkhomedir to PAM configuration
+log "Configuring pam_mkhomedir in $PAM_FILE." "INFO"
+if ! grep -q "pam_mkhomedir.so" "$PAM_FILE"; then
+	echo "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> "$PAM_FILE"
+else
+	echo "pam_mkhomedir is already configured in $PAM_FILE."
+fi
+
+#Start the sshd service
 systemctl restart sshd.service
 
-#Check if sssd service restart was successful
+#Check if sshd service restart was successful
 if [ $? -ne 0 ]
 then
 	log "sshd service restart post sshd config changes failed  {Status code: 0fxdjcssh12}."	
@@ -506,7 +545,7 @@ then
 	#Restore sshd file
 	mv -f /etc/ssh/sshd_config_djbkp.$PSTFIX /etc/ssh/sshd_config
 	
-	#Start the sssd service
+	#Start the sshd service
 	systemctl restart sshd.service
 	if [ "$SUPPERRS" = "false" ]; then
 		exit 12
