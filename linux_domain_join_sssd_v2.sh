@@ -497,16 +497,13 @@ fi
 # Define the PAM configuration directory
 PAM_DIR="/etc/pam.d"
 
-# Backup existing PAM files
-log "Creating backups of PAM configuration files." "INFO"
-for file in "$PAM_DIR"/*; do
-	cp "$file" "$file.djbkp.$PSTFIX"
-done
-
 # Comment out references to tally in PAM files
 log "Commenting out references to tally in PAM configuration files." "INFO"
 for file in "$PAM_DIR"/*; do
 	if grep -q "tally" "$file"; then
+		# Backup existing PAM files
+		cp "$file" "$file.djbkp.$PSTFIX"
+		# Comment out references to tally
 		sed -i 's/^\(.*tally.*\)$/#\1/' "$file"
 		log "Reference to tally found in $file and commented." "INFO"
 	fi
