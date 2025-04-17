@@ -425,11 +425,11 @@ if [ -f /etc/sssd/sssd.conf_old.$PSTFIX ]; then
 	#Carry over earlier values and check for duplicates
 	ADMINGRPOLD=`grep ^simple_allow_groups /etc/sssd/sssd.conf_old.$PSTFIX | cut -d"=" -f2 | tr -d " "`
 	ADMINGRPNEW="$ADMINGRPOLD,$ADMINGRPS"
-	ADMINGRPS=`echo $ADMINGRPNEW | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/' | tr -d "\""`
+	ADMINGRPS=`echo $ADMINGRPNEW | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | sort | uniq | tr '\n' ',' | sed '$s/,$/\n/' | tr -d "\""`
 
 	ADMINACCTSOLD=`grep ^simple_allow_users /etc/sssd/sssd.conf_old.$PSTFIX | cut -d"=" -f2 | tr -d " "`
 	ADMINACCTSNEW="$ADMINACCTSOLD,$ADMINACCTS"
-	ADMINACCTS=`echo $ADMINACCTSNEW | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | uniq | tr '\n' ',' | sed '$s/,$/\n/' | tr -d "\""`
+	ADMINACCTS=`echo $ADMINACCTSNEW | sed 's/^,//' | sed 's/,$//' | tr "," "\n" | sort | uniq | tr '\n' ',' | sed '$s/,$/\n/' | tr -d "\""`
 	
 	log "Copied admin account/group from old sssd.conf file /etc/sssd/sssd.conf_old.$PSTFIX. New values:" "INFO"
 	log "Admin Accounts: $ADMINACCTS" "INFO"
@@ -450,6 +450,16 @@ fi
 #Make sure /etc/sssd/sssd.conf permissions are 600 and is owned by root user
 chmod 600 /etc/sssd/sssd.conf
 chown root:root /etc/sssd/sssd.conf
+
+#Reconfigure hostname
+log "Reconfiguring hostname to $HOSTN.$DMNUCS." "INFO"
+hostnamectl set-hostname $HOSTN.$DMNUCS
+if [ $? -ne 0 ]
+then
+	log "Hostname reconfiguration failed, not fatal."
+else
+	log "Hostname reconfigured to $HOSTN.$DMNUCS." "INFO"
+fi
 
 #Start and enable the sssd service:
 systemctl enable sssd.service
@@ -651,21 +661,7 @@ if [ "$NSUPDT" = "true" ]; then
 		mkdir -p /etc/network/if-up.d
 	fi
 	
-	#Set the hostname to the FQDN
-	hostnamectl set-hostname $HOSTN.$DMNUCS
-	systemctl restart sssd.service
-
-	#Check if sssd service restart was successful
-	if [ $? -ne 0 ]
-	then
-		log "sssd service restart post sssd config changes failed {Status code: 0fxdjcnsu10}."
-		if [ "$SUPPERRS" = "false" ]; then
-			exit 10
-		fi
-	else
-		log "sssd service restart post sssd config changes was successful." "INFO"
-	fi
-
+	#Create the script file
 	echo '#!/bin/bash' > /etc/network/if-up.d/nsupdate.sh
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
 	echo '################################################################################' >> /etc/network/if-up.d/nsupdate.sh
