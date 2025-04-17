@@ -651,6 +651,21 @@ if [ "$NSUPDT" = "true" ]; then
 		mkdir -p /etc/network/if-up.d
 	fi
 	
+	#Set the hostname to the FQDN
+	hostnamectl set-hostname $HOSTN.$DMNUCS
+	systemctl restart sssd.service
+
+	#Check if sssd service restart was successful
+	if [ $? -ne 0 ]
+	then
+		log "sssd service restart post sssd config changes failed {Status code: 0fxdjcnsu10}."
+		if [ "$SUPPERRS" = "false" ]; then
+			exit 10
+		fi
+	else
+		log "sssd service restart post sssd config changes was successful." "INFO"
+	fi
+
 	echo '#!/bin/bash' > /etc/network/if-up.d/nsupdate.sh
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
 	echo '################################################################################' >> /etc/network/if-up.d/nsupdate.sh
