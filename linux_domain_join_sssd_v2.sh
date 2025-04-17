@@ -518,7 +518,7 @@ if ! grep -q "pam_mkhomedir.so" "$PAMDIR"/*; then
 	log "Configuring pam_mkhomedir in $PAMDIR/common-session." "INFO"
 	echo "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> "$PAMDIR/common-session"
 else
-	echo "pam_mkhomedir is already configured in $PAMDIR."
+	log "pam_mkhomedir is already configured in $PAMDIR." "INFO"
 fi
 
 #Start the sshd service
