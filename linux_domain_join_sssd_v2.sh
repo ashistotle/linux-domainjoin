@@ -207,17 +207,20 @@ done
 OS=`grep "^ID=" /etc/os-release |cut -d "=" -f2`
 
 #Run commands based on OS type
-if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
+#if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
+if [[ `echo $OS | grep -ic "ubuntu"` -eq 1 || `echo $OS | grep -ic "debian"` -eq 1 ]];then
 	IPADDR=`hostname -i | awk '{print $1}'`
 	DEBIAN_FRONTEND=noninteractive apt-get -y update
 	#Install necessary packages
 	DEBIAN_FRONTEND=noninteractive apt-get -y install sssd realmd adcli sssd-tools sssd-ad krb5-user dnsutils libpam-mkhomedir
-elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
+#elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
+elif [[ `echo $OS | grep -ic "rhel"` -eq 1 || `echo $OS | grep -ic "centos"` -eq 1 ]]; then
 	IPADDR=`hostname -I | awk '{print $1}'`
 	yum -y update
 	#Install necessary packages
 	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils pam_oddjob_mkhomedir
-elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
+#elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
+elif [[ `echo $OS | grep -ic "sles"` -eq 1 || `echo $OS | grep -ic "opensuse"` -eq 1 ]]; then
     IPADDR=`hostname -I | awk '{print $1}'`
     zypper refresh
     # Install necessary packages
@@ -475,11 +478,14 @@ else
 fi
 
 #Add authconfig part here to ensure pam.d fies are updated
-if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
+#if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
+if [[ `echo $OS | grep -ic "ubuntu"` -eq 1 || `echo $OS | grep -ic "debian"` -eq 1 ]];then
 	pam-auth-update --force
-elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
+#elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
+elif [[ `echo $OS | grep -ic "rhel"` -eq 1 || `echo $OS | grep -ic "centos"` -eq 1 ]]; then
 	authconfig --enablesssdauth --update
-elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
+#elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
+elif [[ `echo $OS | grep -ic "sles"` -eq 1 || `echo $OS | grep -ic "opensuse"` -eq 1 ]]; then
     pam-config --add --sss
     pam-config --add --mkhomedir
 fi

@@ -274,12 +274,12 @@ fi
 #Check if local group is requested
 if [ -z "$GRPNAME" ]; then
 	if [ $DOMAINJOINTAG -eq 0 ]; then
-		#If group name is not provided and system is not domain joined, create group same as username
+		#If group name is not provided and system is not domain joined, create group LCLUSERS
 		log "Group name has not been provided. A new local group with name as LCLUSERS will be created." "INFO"
 		GRPNAME="LCLUSERS"
 	else
 		#If group name is not provided and system is domain joined, create new group DJUSERS
-		log "Group name has not been provided. Two new local group with name as LCLUSERS and DJUSERS will be created." "INFO"
+		log "Group name has not been provided. Two new local groups with name as LCLUSERS and DJUSERS will be created." "INFO"
 		GRPNAME="LCLUSERS,DJUSERS"
 	fi
 fi
