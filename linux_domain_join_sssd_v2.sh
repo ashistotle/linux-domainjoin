@@ -218,13 +218,13 @@ elif [[ `echo $OS | grep -ic "rhel"` -eq 1 || `echo $OS | grep -ic "centos"` -eq
 	IPADDR=`hostname -I | awk '{print $1}'`
 	yum -y update
 	#Install necessary packages
-	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils pam_oddjob_mkhomedir
+	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils #pam_oddjob_mkhomedir
 #elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
 elif [[ `echo $OS | grep -ic "sles"` -eq 1 || `echo $OS | grep -ic "opensuse"` -eq 1 ]]; then
     IPADDR=`hostname -I | awk '{print $1}'`
     zypper refresh
     # Install necessary packages
-    zypper install -y sssd realmd adcli sssd-tools krb5-client bind-utils pam_oddjob_mkhomedir
+    zypper install -y sssd realmd adcli sssd-tools krb5-client bind-utils #pam_oddjob_mkhomedir
 else
     log "Unsupported OS detected {Status code: 0fxdjcsos01}."
     exit 1
@@ -480,6 +480,7 @@ fi
 #Add authconfig part here to ensure pam.d fies are updated
 #if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]];then
 if [[ `echo $OS | grep -ic "ubuntu"` -eq 1 || `echo $OS | grep -ic "debian"` -eq 1 ]];then
+	#echo "pam-auth-update pam-auth-update/force boolean true" | debconf-set-selections
 	pam-auth-update --force
 #elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
 elif [[ `echo $OS | grep -ic "rhel"` -eq 1 || `echo $OS | grep -ic "centos"` -eq 1 ]]; then
