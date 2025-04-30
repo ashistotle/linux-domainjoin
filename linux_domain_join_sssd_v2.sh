@@ -224,7 +224,7 @@ elif [[ `echo $OS | grep -ic "sles"` -eq 1 || `echo $OS | grep -ic "opensuse"` -
     IPADDR=`hostname -I | awk '{print $1}'`
     zypper refresh
     # Install necessary packages
-    zypper install -y sssd realmd adcli sssd-tools krb5-client bind-utils #pam_oddjob_mkhomedir
+    zypper install -y sssd realmd adcli sssd-tools krb krb5-server krb5-client bind-utils #pam_oddjob_mkhomedir
 else
     log "Unsupported OS detected {Status code: 0fxdjcsos01}."
     exit 1
