@@ -38,7 +38,7 @@ set +x
 # Create Date: 2nd Aug 2024                                                                 #
 # Update Log:                                                                               #
 #       - 7th Aug 2024 | Added code to suppress minor errors                                #
-#                                                                                           #
+#       - 31st Oct 2025 | Commented out hostname reconfig                                   #
 #                                                                                           #
 #########################################################################################################################################################################################
 #	Exit code |  Status code   |		Description                                                                                                                             #
@@ -455,14 +455,14 @@ chmod 600 /etc/sssd/sssd.conf
 chown root:root /etc/sssd/sssd.conf
 
 #Reconfigure hostname
-log "Reconfiguring hostname to $HOSTN.$DMNUCS." "INFO"
-hostnamectl set-hostname $HOSTN.$DMNUCS
-if [ $? -ne 0 ]
-then
-	log "Hostname reconfiguration failed, not fatal."
-else
-	log "Hostname reconfigured to $HOSTN.$DMNUCS." "INFO"
-fi
+#log "Reconfiguring hostname to $HOSTN.$DMNUCS." "INFO"
+#hostnamectl set-hostname $HOSTN.$DMNUCS
+#if [ $? -ne 0 ]
+#then
+#	log "Hostname reconfiguration failed, not fatal."
+#else
+#	log "Hostname reconfigured to $HOSTN.$DMNUCS." "INFO"
+#fi
 
 #Start and enable the sssd service:
 systemctl enable sssd.service
@@ -735,7 +735,7 @@ if [ "$NSUPDT" = "true" ]; then
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#Wait for 5 seconds and restart the network service' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'sleep 5s' >> /etc/network/if-up.d/nsupdate.sh
-	echo 'hostnamectl set-hostname ${HOSTN}.${DMNLCS}' >> /etc/network/if-up.d/nsupdate.sh
+	#echo 'hostnamectl set-hostname ${HOSTN}.${DMNLCS}' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'systemctl restart sssd' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'systemctl restart sshd' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#systemctl restart NetworkManager' >> /etc/network/if-up.d/nsupdate.sh
