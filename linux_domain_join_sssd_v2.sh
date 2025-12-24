@@ -39,6 +39,7 @@ set +x
 # Update Log:                                                                               #
 #       - 7th Aug 2024 | Added code to suppress minor errors                                #
 #       - 31st Oct 2025 | Commented out hostname reconfig                                   #
+#       - 3rd Dec 2025 | Allowed passed domain controller IP or hostname                    #
 #                                                                                           #
 #########################################################################################################################################################################################
 #	Exit code |  Status code   |		Description                                                                                                                             #
@@ -180,7 +181,10 @@ log "Script running with following parameters: Domain=$DOMAIN, OSP_ID=$OSPID, OS
 
 #Check if hostname already contains domain and remove it
 if [[ `echo "${DCSERVER}" | grep -ic "${DOMAIN}"` -gt 0 ]];then
-	DCSERVER=`echo "${DCSERVER}" | awk -F"." '{print $1}'`
+	# Check if DCSERVER is an IP address
+    if [[ ! "${DCSERVER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+		DCSERVER=`echo "${DCSERVER}" | awk -F"." '{print $1}'`
+	fi
 fi
 
 #Convert domain to upper and lower case
@@ -292,7 +296,14 @@ fi
 
 if [ -n "$DCSERVER" ]
 then
-	DCSRVRIP=`nslookup $DCSERVER.$DMNLCS | tail -2 | grep ^Address | cut -d":" -f2 | tr -d " "`
+	if [[ "${DCSERVER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    	# If DCSERVER is an IP address, assign it to DCSRVRIP and resolve the hostname
+    	DCSRVRIP="${DCSERVER}"
+    	DCSERVER=$(nslookup "${DCSRVRIP}" | grep "name =" | awk -F"= " '{print $2}' | tr -d '.')
+	else
+	    # Existing logic for when DCSERVER is not an IP address
+	    DCSRVRIP=`nslookup $DCSERVER.$DMNLCS | tail -2 | grep ^Address | cut -d":" -f2 | tr -d " "`
+	fi
 	#Add domain controller <-- Check if this is required
 	grep -q ^"$DCSRVRIP" /etc/hosts || sed -i '$s/$/\n'"$DCSRVRIP $DCSERVER $DCSERVER.$DMNLCS"'/' /etc/hosts
 	#Check if host file update was successful
@@ -374,10 +385,14 @@ fi
 #Realm join using OSP ID and Password
 if [ -n "$DCSERVER" ]
 then
-	log "Domain join using DC Server $DCSERVER.$DMNLCS." "INFO"
-	echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" "$DCSERVER.$DMNLCS" -v
+	#Check if DCSERVER is not an IP address, add domain to it
+    if [[ ! "${DCSERVER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        DCSERVER="$DCSERVER.$DMNLCS"
+    fi
+	log "Domain join using DC Server $DCSERVER" "INFO"
+	echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" "$DCSERVER" -v
 else
-	echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" $DMNLCS -v
+	echo "$OSPPWD" | realm join --computer-ou="$OUFRMT,$DCFRMT" --user="$OSPID" "$DMNLCS" -v
 fi
 
 #Check if realm join was successful
@@ -750,7 +765,7 @@ if [ "$NSUPDT" = "true" ]; then
 		log "/etc/network/if-up.d/nsupdate.sh script creation completed. Initiating nsupdate execution." "INFO"
 		
 		#Execute the nsupdate script
-		. /etc/network/if-up.d/nsupdate.sh
+		sudo bash /etc/network/if-up.d/nsupdate.sh
 		
 		RTNVAL=$?
 		
