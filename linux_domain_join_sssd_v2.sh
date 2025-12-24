@@ -723,7 +723,7 @@ create_nsupdate_script() {
 	echo '	echo "!!!!!!!!!!! THE NSUPDATE SCRIPT FAILED EXECUTION !!!!!!!!!!"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	logger "ERROR: [DJScript] The nsupdate script did not run successfully"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	if [ "$SUPPERRS" = "false" ]; then' >> /etc/network/if-up.d/nsupdate.sh
-	echo '		return 111' >> /etc/network/if-up.d/nsupdate.sh
+	echo '		exit 111' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
@@ -742,7 +742,7 @@ create_nsupdate_script() {
 	echo '		echo "Please check crontab and replace with temporary file at: /tmp/tempcrontab.tmp"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		logger "ERROR: [DJScript] The nsupdate script could not be scheduled successfully"' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		if [ "$SUPPERRS" = "false" ]; then' >> /etc/network/if-up.d/nsupdate.sh
-	echo '			return 121' >> /etc/network/if-up.d/nsupdate.sh
+	echo '			exit 121' >> /etc/network/if-up.d/nsupdate.sh
 	echo '		fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '  fi' >> /etc/network/if-up.d/nsupdate.sh
 	echo '	set +f' >> /etc/network/if-up.d/nsupdate.sh
@@ -754,7 +754,7 @@ create_nsupdate_script() {
 	echo 'systemctl restart sssd' >> /etc/network/if-up.d/nsupdate.sh
 	echo 'systemctl restart sshd' >> /etc/network/if-up.d/nsupdate.sh
 	echo '#systemctl restart NetworkManager' >> /etc/network/if-up.d/nsupdate.sh
-	echo 'return 0' >> /etc/network/if-up.d/nsupdate.sh
+	echo 'exit 0' >> /etc/network/if-up.d/nsupdate.sh
 	
 	#Check that /etc/network/if-up.d/nsupdate.sh is not zero byte
 	if [ -s /etc/network/if-up.d/nsupdate.sh ]
