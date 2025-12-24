@@ -40,6 +40,7 @@ set +x
 #       - 7th Aug 2024 | Added code to suppress minor errors                                #
 #       - 31st Oct 2025 | Commented out hostname reconfig                                   #
 #       - 3rd Dec 2025 | Allowed passed domain controller IP or hostname                    #
+#       - 24th Dec 2025 | Re-execute nsupdate script after failure                          #
 #                                                                                           #
 #########################################################################################################################################################################################
 #	Exit code |  Status code   |		Description                                                                                                                             #
@@ -675,14 +676,13 @@ do
 	fi	
 done
 
-#Create the script /etc/network/if-up.d/nsupdate.sh
-if [ "$NSUPDT" = "true" ]; then
+create_nsupdate_script() {
 	#Create the folder, if not present
 	if [ ! -d /etc/network/if-up.d ]
 	then
 		mkdir -p /etc/network/if-up.d
 	fi
-	
+
 	#Create the script file
 	echo '#!/bin/bash' > /etc/network/if-up.d/nsupdate.sh
 	echo '' >> /etc/network/if-up.d/nsupdate.sh
@@ -760,44 +760,78 @@ if [ "$NSUPDT" = "true" ]; then
 	if [ -s /etc/network/if-up.d/nsupdate.sh ]
 	then		
 		#Change mode of the nsupdate file to 777
-		chmod 777 /etc/network/if-up.d/nsupdate.sh
-		
-		log "/etc/network/if-up.d/nsupdate.sh script creation completed. Initiating nsupdate execution." "INFO"
-		
-		#Execute the nsupdate script
-		sudo bash /etc/network/if-up.d/nsupdate.sh
-		
-		RTNVAL=$?
-		
-		#Change the lines starting with return to exit to make the script standalone
-		sed -i 's/return/exit/g' /etc/network/if-up.d/nsupdate.sh
-		
-		if [ $RTNVAL -eq 0 ]
-		then
-			log "nsupdate script execution completed successfully." "INFO"
-		elif [ $RTNVAL -eq 111 ]
-		then
-			log "nsupdate script execution failed {Status code: 0fxdjcsnu16}."
-			if [ "$SUPPERRS" = "false" ]; then
-				exit 16
-			fi
-		elif [ $RTNVAL -eq 121 ]
-		then
-			log "nsupdate script failed to be scheduled through crontab {Status code: 0fxdjcsnu17}."
-			if [ "$SUPPERRS" = "false" ]; then
-				exit 17
-			fi
-		else
-			log "nsupdate script execution failed due to some unknown error {Status code: 0fxdjcsnu18}."
-			if [ "$SUPPERRS" = "false" ]; then
-				exit 18
-			fi
-		fi	
+		chmod 777 /etc/network/if-up.d/nsupdate.sh		
+		log "/etc/network/if-up.d/nsupdate.sh script creation completed." "INFO"
 	else
 		log "nsupdate script creation failed {Status code: 0fxdjcsnu15}."
 		if [ "$SUPPERRS" = "false" ]; then
 			exit 15
 		fi
+	fi
+}
+
+RTNVAL=0
+
+execute_nsupdate_script() {
+	#Create the nsupdate script from scratch	
+	create_nsupdate_script
+
+	#Execute the nsupdate script
+	sudo bash /etc/network/if-up.d/nsupdate.sh
+	RTNVAL=$?
+	
+	#Change the lines starting with return to exit to make the script standalone
+	sed -i 's/return/exit/g' /etc/network/if-up.d/nsupdate.sh
+}
+
+#Create the script /etc/network/if-up.d/nsupdate.sh
+if [ "$NSUPDT" = "true" ]; then
+	
+	execute_nsupdate_script
+		
+	if [ $RTNVAL -eq 0 ]
+	then
+		log "nsupdate script execution completed successfully." "INFO"
+	elif [ $RTNVAL -eq 111 ]
+	then
+		log "nsupdate script execution failed {Status code: 0fxdjcsnu16}."
+		log "Attempting to recreate and re-execute the nsupdate script." "INFO"
+		
+		execute_nsupdate_script
+		
+		if [ $RTNVAL -eq 0 ]
+		then
+			log "nsupdate script execution completed successfully on re-execution." "INFO"
+		else
+			log "nsupdate script re-execution failed {Status code: 0fxdjcsnu16}."
+			log "To manually execute the nsupdate script, run: sudo bash /etc/network/if-up.d/nsupdate.sh" "INFO"
+			if [ "$SUPPERRS" = "false" ]; then
+				exit 16
+			fi
+		fi
+	elif [ $RTNVAL -eq 121 ]
+	then
+		log "nsupdate script failed to be scheduled through crontab {Status code: 0fxdjcsnu17}."
+		log "To manually add the nsupdate script to crontab, run: crontab -e and add the line '0 6 * * 1 /etc/network/if-up.d/nsupdate.sh 2>&1 /tmp/nsupdate.log'" "INFO"
+		if [ "$SUPPERRS" = "false" ]; then
+			exit 17
+		fi
+	else
+		log "nsupdate script execution failed due to some unknown error {Status code: 0fxdjcsnu18}."
+		log "Attempting to recreate and re-execute the nsupdate script." "INFO"
+		
+		execute_nsupdate_script
+
+		if [ $RTNVAL -eq 0 ]
+		then
+			log "nsupdate script execution completed successfully on re-execution." "INFO"
+		else
+			log "nsupdate script re-execution failed {Status code: 0fxdjcsnu18}."
+			log "To manually execute the nsupdate script, run: sudo bash /etc/network/if-up.d/nsupdate.sh" "INFO"
+			if [ "$SUPPERRS" = "false" ]; then
+				exit 18
+			fi
+		fi	
 	fi
 fi
 
