@@ -221,7 +221,8 @@ if [[ `echo $OS | grep -ic "ubuntu"` -eq 1 || `echo $OS | grep -ic "debian"` -eq
 #elif [[ "$OS" == "rhel" || "$OS" == "centos" ]]; then
 elif [[ `echo $OS | grep -ic "rhel"` -eq 1 || `echo $OS | grep -ic "centos"` -eq 1 ]]; then
 	IPADDR=`hostname -I | awk '{print $1}'`
-	yum -y update
+	#yum -y update
+	yum clean all && yum makecache
 	#Install necessary packages
 	yum -y install sssd realmd oddjob krb5-workstation openldap-clients bind-utils #pam_oddjob_mkhomedir
 #elif [[ "$OS" == "sles" || "$OS" == "opensuse" ]]; then
@@ -229,7 +230,7 @@ elif [[ `echo $OS | grep -ic "sles"` -eq 1 || `echo $OS | grep -ic "opensuse"` -
     IPADDR=`hostname -I | awk '{print $1}'`
     zypper refresh
     # Install necessary packages
-    zypper install -y sssd realmd adcli sssd-tools krb krb5-server krb5-client bind-utils #pam_oddjob_mkhomedir
+    zypper --non-interactive install sssd sssd-ad realmd adcli sssd-tools krb5-server krb5-client bind-utils #-y krb pam_oddjob_mkhomedir
 else
     log "Unsupported OS detected {Status code: 0fxdjcsos01}."
     exit 1
@@ -254,7 +255,7 @@ else
 fi
 
 #Retrieve Hostname and FQDN
-HOSTN=`hostname -f`
+HOSTN=`hostname -f`	
 
 #Check if Hostname was correctly retrieved
 if [ -n "$HOSTN" ]
@@ -332,7 +333,7 @@ fi
 echo "# Configuration snippets may be placed in this directory as well" > /etc/krb5.conf
 echo "includedir /etc/krb5.conf.d/" >> /etc/krb5.conf
 echo "" >> /etc/krb5.conf
-echo "includedir /var/lib/sss/pubconf/krb5.include.d/" >> /etc/krb5.conf
+echo "# includedir /var/lib/sss/pubconf/krb5.include.d/" >> /etc/krb5.conf
 echo "[logging]" >> /etc/krb5.conf
 echo " default = FILE:/var/log/krb5libs.log" >> /etc/krb5.conf
 echo " kdc = FILE:/var/log/krb5kdc.log" >> /etc/krb5.conf
